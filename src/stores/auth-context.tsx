@@ -9,8 +9,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // 1. Define the shape of your context
 export interface User {
-  id?: string;
-  name?: string;
+  _id?: string;
+  fullName?: string;
   email?: string;
   role?: string;
   profilePhoto?: string;

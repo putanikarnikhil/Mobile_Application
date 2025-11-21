@@ -18,6 +18,8 @@ import { Task, AppState, User } from "../App";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { TaskStackParamList, RootStackParamList } from "../navigation/types";
+import { useAuth } from "../stores/auth-context";
+import { log } from "../config/logger-config";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -157,6 +159,9 @@ const TasksPage: React.FC<TasksPageProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<TasksPageNavigationProp>();
+  const { user, token } = useAuth();
+  log.info("Auth page: ", user);
+  log.info("User token: ", token);
 
   const filteredTasks = getFilteredTasks(
     tasks,
@@ -189,6 +194,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
 
         <View style={styles.header}>
           <Text style={styles.title}>TASKS</Text>
+          <Text style={styles.title}>Hey {user?.fullName}</Text>
 
           <TouchableOpacity
             onPress={handleProfilePress}

@@ -72,7 +72,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
   const passwordFocusAnim = useRef(new Animated.Value(0)).current;
   const backgroundPulseAnim = useRef(new Animated.Value(0)).current;
 
-  const { user, login, logout } = useAuth();
+  const { login } = useAuth();
 
   useEffect(() => {
     Animated.loop(
@@ -131,7 +131,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
 
     try {
       const response = await authService.login({ email, password });
-      console.log("qwe", response);
 
       if (response.success && response.user) {
         // Map backend user data to app user format
