@@ -6,6 +6,8 @@ import AuthStackNavigator from "./navigation/AuthStack";
 import RootNavigator from "./navigation/RootNavigator";
 import { ColorConstants } from "./AppStyles";
 import { AuthProvider } from "./stores/auth-context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { queryConfig } from "./lib/react-query-config";
 
 // ====================================================================
 // CORE TYPE DEFINITIONS (REQUIRED FOR TASK DETAIL PAGE TO WORK)
@@ -265,34 +267,46 @@ const App: React.FC = () => {
     ]
   );
 
+  //query client tanstack
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: queryConfig,
+      })
+  );
+
   if (appAuthState.view === "login") {
     return (
       <View style={styles.container}>
-        <AuthProvider>
-          <NavigationContainer>
-            <AuthStackNavigator setAppState={setAppAuthState} />
-          </NavigationContainer>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <NavigationContainer>
+              <AuthStackNavigator setAppState={setAppAuthState} />
+            </NavigationContainer>
+          </AuthProvider>
+        </QueryClientProvider>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <AuthProvider>
-        <NavigationContainer>
-          <RootNavigator
-            tasks={tasks}
-            appState={appState}
-            setAppState={setAppAuthState}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            profileImage={profileImage}
-            setProfileImage={setProfileImage}
-            setActiveSection={setActiveSection}
-          />
-        </NavigationContainer>
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <NavigationContainer>
+            <RootNavigator
+              tasks={tasks}
+              appState={appState}
+              setAppState={setAppAuthState}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              profileImage={profileImage}
+              setProfileImage={setProfileImage}
+              setActiveSection={setActiveSection}
+            />
+          </NavigationContainer>
+        </AuthProvider>
+      </QueryClientProvider>
     </View>
   );
 };
