@@ -18,6 +18,7 @@ import { StackScreenProps } from "@react-navigation/stack";
 import { AuthStackParamList } from "../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import authService from "../services/authService";
+import { useAuth } from "../stores/auth-context";
 
 const CustomColorConstants = {
   primaryBrand: "#2ecc71",
@@ -70,6 +71,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
   const emailFocusAnim = useRef(new Animated.Value(0)).current;
   const passwordFocusAnim = useRef(new Animated.Value(0)).current;
   const backgroundPulseAnim = useRef(new Animated.Value(0)).current;
+
+  const { user, login, logout } = useAuth();
 
   useEffect(() => {
     Animated.loop(
@@ -140,6 +143,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
           profilePhoto: response.user.profilePhoto,
           organisation: response.user.organisation,
         };
+
+        //context function to set user details
+        login(response.token, response.user);
 
         setAppState({ view: "tasks", user: appUser });
         Alert.alert("Success", response.message);

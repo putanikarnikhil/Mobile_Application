@@ -5,6 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import AuthStackNavigator from "./navigation/AuthStack";
 import RootNavigator from "./navigation/RootNavigator";
 import { ColorConstants } from "./AppStyles";
+import { AuthProvider } from "./stores/auth-context";
 
 // ====================================================================
 // CORE TYPE DEFINITIONS (REQUIRED FOR TASK DETAIL PAGE TO WORK)
@@ -267,27 +268,31 @@ const App: React.FC = () => {
   if (appAuthState.view === "login") {
     return (
       <View style={styles.container}>
-        <NavigationContainer>
-          <AuthStackNavigator setAppState={setAppAuthState} />
-        </NavigationContainer>
+        <AuthProvider>
+          <NavigationContainer>
+            <AuthStackNavigator setAppState={setAppAuthState} />
+          </NavigationContainer>
+        </AuthProvider>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <NavigationContainer>
-        <RootNavigator
-          tasks={tasks}
-          appState={appState}
-          setAppState={setAppAuthState}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          profileImage={profileImage}
-          setProfileImage={setProfileImage}
-          setActiveSection={setActiveSection}
-        />
-      </NavigationContainer>
+      <AuthProvider>
+        <NavigationContainer>
+          <RootNavigator
+            tasks={tasks}
+            appState={appState}
+            setAppState={setAppAuthState}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            profileImage={profileImage}
+            setProfileImage={setProfileImage}
+            setActiveSection={setActiveSection}
+          />
+        </NavigationContainer>
+      </AuthProvider>
     </View>
   );
 };
@@ -300,140 +305,3 @@ const styles = StyleSheet.create({
 });
 
 export default App;
-
-// // App.tsx
-// import React, { useState, useEffect } from 'react';
-// import { StyleSheet, Platform, UIManager, LayoutAnimation } from 'react-native';
-// import { SafeAreaProvider } from 'react-native-safe-area-context';
-// import { styles } from './AppStyles';
-// import LoginPage from './components/LoginPage';
-// import TasksPage from './components/TasksPage';
-// import TaskDetailPage from './components/TaskDetailPage';
-// import ProfilePage from './components/ProfilePage';
-// import NotificationsPage from './components/NotificationsPage';
-
-// // Enable LayoutAnimation for Android
-// if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-//   UIManager.setLayoutAnimationEnabledExperimental(true);
-// }
-
-// // Type Definitions
-// export interface Task {
-//   id: string;
-//   orderId: string;
-//   orderStageId: string;
-//   factory: string;
-//   product: string;
-//   stage: string;
-//   taskId: string;
-//   taskType: string;
-//   status: 'Pending Review' | 'Submitted' | 'Overdue' | 'Completed' | 'Rejected';
-//   stageStatus: string;
-//   isOverdue: boolean;
-//   isSubmitted: boolean;
-//   isCompleted: boolean;
-//   isRejected: boolean;
-//   photos: string[];
-//   comments: string;
-// }
-
-// export interface User {
-//   name: string;
-//   email: string;
-// }
-
-// export interface AppState {
-//   view: 'login' | 'tasks' | 'taskDetail' | 'profile' | 'notifications';
-//   user: User | null;
-//   activeSection: string;
-//   taskDetail: Task | null;
-// }
-
-// const initialTasks: Task[] = [
-//   { id: '1', orderId: 'ORD-2024-001', orderStageId: 'STG-KNT-001', factory: 'Premium Textiles Ltd', product: 'Cotton Polo Shirts', stage: 'Knitting', taskId: 'TSK-KNT-2024-001', taskType: 'Quality Check', status: 'Pending Review', stageStatus: 'Active', isOverdue: false, isSubmitted: false, isCompleted: false, isRejected: false, photos: [], comments: '' },
-//   { id: '2', orderId: 'ORD-2024-002', orderStageId: 'STG-DYG-001', factory: 'Elite Garments Co', product: 'Denim Jackets', stage: 'Dyeing', taskId: 'TSK-DYG-2024-001', taskType: 'Quality Check', status: 'Submitted', stageStatus: 'Active', isOverdue: false, isSubmitted: true, isCompleted: false, isRejected: false, photos: [], comments: '' },
-//   { id: '3', orderId: 'ORD-2024-003', orderStageId: 'STG-FNS-001', factory: 'Modern Mills Inc', product: 'Silk Scarves', stage: 'Finishing', taskId: 'TSK-FNS-2024-001', taskType: 'Quality Check', status: 'Overdue', stageStatus: 'Active', isOverdue: true, isSubmitted: false, isCompleted: false, isRejected: false, photos: [], comments: '' },
-//   { id: '4', orderId: 'ORD-2024-004', orderStageId: 'STG-FNS-002', factory: 'Modern Mills Inc', product: 'Silk Scarves', stage: 'Finishing', taskId: 'TSK-FNS-2024-002', taskType: 'Quality Check', status: 'Completed', stageStatus: 'Active', isOverdue: false, isSubmitted: false, isCompleted: true, isRejected: false, photos: [], comments: '' },
-//   { id: '5', orderId: 'ORD-2024-005', orderStageId: 'STG-FNS-003', factory: 'Modern Mills Inc', product: 'Silk Scarves', stage: 'Finishing', taskId: 'TSK-FNS-2024-003', taskType: 'Quality Check', status: 'Overdue', stageStatus: 'Active', isOverdue: true, isSubmitted: false, isCompleted: false, isRejected: false, photos: [], comments: '' },
-//   { id: '6', orderId: 'ORD-2024-006', orderStageId: 'STG-FNS-004', factory: 'Modern Mills Inc', product: 'Silk Scarves', stage: 'Finishing', taskId: 'TSK-FNS-2024-004', taskType: 'Quality Check', status: 'Rejected', stageStatus: 'Active', isOverdue: false, isSubmitted: false, isCompleted: false, isRejected: true, photos: [], comments: '' },
-// ];
-
-// export default function App() {
-//   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-//   const [appState, setAppState] = useState<AppState>({ view: 'login', user: null, activeSection: 'Active Tasks', taskDetail: null });
-//   const [images, setImages] = useState<string[]>([]);
-//   const [comment, setComment] = useState<string>('');
-//   const [searchQuery, setSearchQuery] = useState<string>('');
-//   const [profileImage, setProfileImage] = useState<string | null>(null);
-
-//   const updateTaskStatus = (taskId: string, newStatus: Task['status'], newImages: string[], newComment: string) => {
-//     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-//     setTasks(prevTasks =>
-//       prevTasks.map(task => {
-//         if (task.id === taskId) {
-//           return {
-//             ...task,
-//             status: newStatus,
-//             isOverdue: false,
-//             isSubmitted: newStatus === 'Submitted',
-//             isCompleted: newStatus === 'Completed',
-//             isRejected: newStatus === 'Rejected',
-//             photos: newImages,
-//             comments: newComment
-//           };
-//         }
-//         return task;
-//       })
-//     );
-//   };
-
-//   const renderContent = () => {
-//     switch (appState.view) {
-//       case 'login':
-//         return <LoginPage setAppState={setAppState} />;
-//       case 'tasks':
-//         return (
-//           <TasksPage
-//             tasks={tasks}
-//             appState={appState}
-//             setAppState={setAppState}
-//             searchQuery={searchQuery}
-//             setSearchQuery={setSearchQuery}
-//             profileImage={profileImage}
-//             setImages={setImages}
-//             setComment={setComment}
-//           />
-//         );
-//       case 'taskDetail':
-//         if (!appState.taskDetail) return null;
-//         return (
-//           <TaskDetailPage
-//             task={appState.taskDetail}
-//             onGoBack={() => setAppState(prevState => ({ ...prevState, view: 'tasks', taskDetail: null }))}
-//             onTaskUpdate={updateTaskStatus}
-//             images={images}
-//             setImages={setImages}
-//             comment={comment}
-//             setComment={setComment}
-//           />
-//         );
-//       case 'profile':
-//         if (!appState.user) return null;
-//         return (
-//           <ProfilePage
-//             user={appState.user}
-//             profileImage={profileImage}
-//             setProfileImage={setProfileImage}
-//             onGoBack={() => setAppState(prevState => ({ ...prevState, view: 'tasks' }))}
-//             setAppState={setAppState}
-//           />
-//         );
-//       case 'notifications':
-//         return <NotificationsPage onGoBack={() => setAppState(prevState => ({ ...prevState, view: 'profile' }))} />;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   return <SafeAreaProvider>{renderContent()}</SafeAreaProvider>;
-// }

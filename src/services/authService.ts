@@ -21,6 +21,7 @@ export interface LoginResponse {
   message: string;
   user: UserData;
   success: boolean;
+  token: string;
 }
 
 export interface LogoutResponse {
@@ -38,13 +39,13 @@ class AuthService {
       );
 
       log.debug("User Response: ", response.data);
-
       if (response.data.success && response.data.user) {
         // Store user data in AsyncStorage
         await AsyncStorage.setItem(
           "userData",
           JSON.stringify(response.data.user)
         );
+        await AsyncStorage.setItem("token", response.data.token);
 
         return response.data;
       }
