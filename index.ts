@@ -1,5 +1,5 @@
 // index.tsx
-import { registerRootComponent } from 'expo';
-import App from './App';
+import { registerRootComponent } from "expo";
+import App from "./src/App";
 
 registerRootComponent(App);

@@ -1,5 +1,5 @@
-import { Task, User } from '../App';
-import { StackScreenProps } from '@react-navigation/stack';  
+import { Task, User } from "../App";
+import { StackScreenProps } from "@react-navigation/stack";
 
 // --- 1. Auth Stack ---
 export type AuthStackParamList = {
@@ -19,13 +19,15 @@ export type MainTabsParamList = {
 
 // --- 4. Root Stack (Handles Tabs and Modals) ---
 export type RootStackParamList = {
-  MainTabs: undefined;  
-  ProfileModal: { user: User; profileImage: string | null };  
-  NotificationsModal: undefined;  
+  MainTabs: undefined;
+  ProfileModal: { user: User; profileImage: string | null };
+  NotificationsModal: undefined;
 };
 
 // --- Utility Types ---
 // Exported for use in components/screens
-export type RootStackScreenProps<T extends keyof RootStackParamList> = StackScreenProps<RootStackParamList, T>;
+export type RootStackScreenProps<T extends keyof RootStackParamList> =
+  StackScreenProps<RootStackParamList, T>;
 
-export type TaskStackScreenProps<T extends keyof TaskStackParamList> = StackScreenProps<TaskStackParamList, T>;
+export type TaskStackScreenProps<T extends keyof TaskStackParamList> =
+  StackScreenProps<TaskStackParamList, T>;
