@@ -1,6 +1,31 @@
 // services/authService.ts
-import api from './api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from "./api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logger, consoleTransport } from "react-native-logs";
+
+var log = logger.createLogger({
+  levels: {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3,
+  },
+  severity: "debug",
+  transport: consoleTransport,
+  transportOptions: {
+    colors: {
+      info: "blueBright",
+      warn: "yellowBright",
+      error: "redBright",
+    },
+  },
+  async: true,
+  dateFormat: "time",
+  printLevel: true,
+  printDate: true,
+  fixedExtLvlLength: false,
+  enabled: true,
+});
 
 export interface LoginCredentials {
   email: string;
@@ -28,33 +53,32 @@ export interface LogoutResponse {
 }
 
 class AuthService {
-  /**
-   * Login user with email and password
-   */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      console.log("kol",credentials);
-      const response = await api.post<LoginResponse>('/user/login', credentials);
-      console.log("kol2");
-      
+      // console.log("kol", credentials);
+      const response = await api.post<LoginResponse>(
+        "/user/login",
+        credentials
+      );
+
+      log.debug("User Response: ", response.data);
+
       if (response.data.success && response.data.user) {
         // Store user data in AsyncStorage
-        await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
-        
-        // Note: In React Native, cookies aren't automatically handled like in browsers
-        // The backend sets an httpOnly cookie, but for mobile we should use the token
-        // You may need to modify your backend to also return a token in the response body
-        // For now, we'll store the user data
-        
+        await AsyncStorage.setItem(
+          "userData",
+          JSON.stringify(response.data.user)
+        );
+
         return response.data;
       }
-      
-      throw new Error(response.data.message || 'Login failed');
+
+      throw new Error(response.data.message || "Login failed");
     } catch (error: any) {
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-      throw new Error(error.message || 'Network error. Please try again.');
+      throw new Error(error.message || "Network error. Please try again.");
     }
   }
 
@@ -63,23 +87,23 @@ class AuthService {
    */
   async logout(): Promise<LogoutResponse> {
     try {
-      const response = await api.get<LogoutResponse>('/user/logout');
+      const response = await api.get<LogoutResponse>("/user/logout");
       console.log(response);
-      
+
       // Clear local storage
-      await AsyncStorage.removeItem('userData');
-      await AsyncStorage.removeItem('authToken');
-      
+      await AsyncStorage.removeItem("userData");
+      await AsyncStorage.removeItem("authToken");
+
       return response.data;
     } catch (error: any) {
       // Even if the API call fails, clear local data
-      await AsyncStorage.removeItem('userData');
-      await AsyncStorage.removeItem('authToken');
-      
+      await AsyncStorage.removeItem("userData");
+      await AsyncStorage.removeItem("authToken");
+
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-      throw new Error(error.message || 'Logout failed');
+      throw new Error(error.message || "Logout failed");
     }
   }
 
@@ -88,10 +112,10 @@ class AuthService {
    */
   async getUserData(): Promise<UserData | null> {
     try {
-      const userData = await AsyncStorage.getItem('userData');
+      const userData = await AsyncStorage.getItem("userData");
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error('Error getting user data:', error);
+      console.error("Error getting user data:", error);
       return null;
     }
   }
