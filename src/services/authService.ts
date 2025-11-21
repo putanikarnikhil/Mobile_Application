@@ -1,31 +1,7 @@
 // services/authService.ts
+import { log } from "../config/logger-config";
 import api from "./api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { logger, consoleTransport } from "react-native-logs";
-
-var log = logger.createLogger({
-  levels: {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3,
-  },
-  severity: "debug",
-  transport: consoleTransport,
-  transportOptions: {
-    colors: {
-      info: "blueBright",
-      warn: "yellowBright",
-      error: "redBright",
-    },
-  },
-  async: true,
-  dateFormat: "time",
-  printLevel: true,
-  printDate: true,
-  fixedExtLvlLength: false,
-  enabled: true,
-});
 
 export interface LoginCredentials {
   email: string;
