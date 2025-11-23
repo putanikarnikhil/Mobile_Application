@@ -5,13 +5,11 @@ import { NavigationContainer } from "@react-navigation/native";
 import AuthStackNavigator from "./navigation/AuthStack";
 import RootNavigator from "./navigation/RootNavigator";
 import { ColorConstants } from "./AppStyles";
-import { AuthProvider } from "./stores/auth-context";
+import { AuthProvider, useAuth } from "./stores/auth-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { queryConfig } from "./lib/react-query-config";
-
-// ====================================================================
-// CORE TYPE DEFINITIONS (REQUIRED FOR TASK DETAIL PAGE TO WORK)
-// ====================================================================
+import { log } from "./config/logger-config";
+import AppNavigator from "./navigation/AppNavigator";
 
 export interface User {
   name: string;
@@ -74,10 +72,6 @@ export interface AppState {
     locationData?: LocationData
   ) => void;
 }
-
-// ====================================================================
-// MOCK DATA
-// ====================================================================
 
 const mockImageUri = "https://picsum.photos/id/102/100/100";
 const mockImageUri2 = "https://picsum.photos/id/103/100/100";
@@ -167,10 +161,6 @@ const INITIAL_TASKS: Task[] = [
     comments: "Inventory confirmed.",
   },
 ];
-
-// ====================================================================
-// APP COMPONENT
-// ====================================================================
 
 const App: React.FC = () => {
   // Authentication State
@@ -274,37 +264,20 @@ const App: React.FC = () => {
         defaultOptions: queryConfig,
       })
   );
-
-  if (appAuthState.view === "login") {
-    return (
-      <View style={styles.container}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <NavigationContainer>
-              <AuthStackNavigator setAppState={setAppAuthState} />
-            </NavigationContainer>
-          </AuthProvider>
-        </QueryClientProvider>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <NavigationContainer>
-            <RootNavigator
-              tasks={tasks}
-              appState={appState}
-              setAppState={setAppAuthState}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              profileImage={profileImage}
-              setProfileImage={setProfileImage}
-              setActiveSection={setActiveSection}
-            />
-          </NavigationContainer>
+          <AppNavigator
+            tasks={tasks}
+            appState={appState}
+            setAppState={setAppAuthState}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            profileImage={profileImage}
+            setProfileImage={setProfileImage}
+            setActiveSection={setActiveSection}
+          />
         </AuthProvider>
       </QueryClientProvider>
     </View>

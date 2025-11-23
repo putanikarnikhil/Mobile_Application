@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// 1. Define the shape of your context
 export interface User {
   _id?: string;
   fullName?: string;
@@ -25,15 +24,12 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-// 2. Create context with default empty values
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// 3. Provider props
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-// 4. Provider implementation
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -58,6 +54,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     loadSession();
   }, []);
+
+  //get user method
+  const getUser = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const user = await AsyncStorage.getItem("userData");
+    if (token) return user;
+    else return null;
+  };
 
   // Login method
   const login = async (token: string, user: User) => {
