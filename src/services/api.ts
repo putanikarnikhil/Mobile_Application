@@ -1,5 +1,5 @@
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // -----------------------------------------------------
 // BACKEND DEPLOYED IN CLOUD
@@ -8,7 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // const API_BASE_URL = 'https://your-backend.onrender.com/api/v1';
 // -----------------------------------------------------
 
-const API_BASE_URL = 'https://verde-backend-zchoo.ondigitalocean.app/api/v1';
+// const API_BASE_URL = 'https://verde-backend-zchoo.ondigitalocean.app/api/v1';
+const API_BASE_URL = "https://localhost:8000/api/v1";
 
 // -----------------------------------------------------
 
@@ -16,14 +17,14 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Automatically attach token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('authToken');
+    const token = await AsyncStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,8 +38,8 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('authToken');
-      await AsyncStorage.removeItem('userData');
+      await AsyncStorage.removeItem("authToken");
+      await AsyncStorage.removeItem("userData");
     }
     return Promise.reject(error);
   }

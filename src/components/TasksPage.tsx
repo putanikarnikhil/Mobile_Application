@@ -20,6 +20,8 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { TaskStackParamList, RootStackParamList } from "../navigation/types";
 import { useAuth } from "../stores/auth-context";
 import { log } from "../config/logger-config";
+import { useQuery } from "@tanstack/react-query";
+import { fetchUserTasks } from "../services/get-user-tasks";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -163,6 +165,14 @@ const TasksPage: React.FC<TasksPageProps> = ({
   log.info("Auth page: ", user);
   log.info("User token: ", token);
 
+  //tanstack api call
+  const allentasks = useQuery({
+    queryKey: ["tasks", token],
+    queryFn: () => fetchUserTasks(token),
+  });
+
+  log.info("Tasks fetched: ", allentasks);
+
   const filteredTasks = getFilteredTasks(
     tasks,
     appState.activeSection,
@@ -194,7 +204,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
 
         <View style={styles.header}>
           <Text style={styles.title}>TASKS</Text>
-          <Text style={styles.title}>Hey {user?.fullName}</Text>
+          {/* <Text style={styles.title}>Hey {user?.fullName}</Text> */}
 
           <TouchableOpacity
             onPress={handleProfilePress}
