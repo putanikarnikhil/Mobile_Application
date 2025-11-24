@@ -19,6 +19,7 @@ import { AuthStackParamList } from "../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import authService from "../services/authService";
 import { useAuth } from "../stores/auth-context";
+import { useLogin } from "../lib/auth-config";
 
 const CustomColorConstants = {
   primaryBrand: "#2ecc71",
@@ -72,8 +73,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
   const passwordFocusAnim = useRef(new Animated.Value(0)).current;
   const backgroundPulseAnim = useRef(new Animated.Value(0)).current;
 
-  const { login } = useAuth();
-
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -120,40 +119,36 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const { mutateAsync: login } = useLogin();
+
   const onLoginPress = async () => {
-    // Clear previous errors
     setErrors({});
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
+
     setLoading(true);
 
     try {
-      const response = await authService.login({ email, password });
+      const result = await login({ email, password });
 
-      if (response.success && response.user) {
-        // Map backend user data to app user format
+      if (result.user) {
         const appUser: User = {
-          name: response.user.fullName,
-          email: response.user.email,
-          _id: response.user._id,
-          role: response.user.role,
-          profilePhoto: response.user.profilePhoto,
-          organisation: response.user.organisation,
+          name: result.user.fullName,
+          email: result.user.email,
+          _id: result.user._id,
+          role: result.user.role,
+          profilePhoto: result.user.profilePhoto,
+          organisation: result.user.organisation,
         };
 
-        //context function to set user details
-        login(response.token, response.user);
-
         setAppState({ view: "tasks", user: appUser });
-        Alert.alert("Success", response.message);
+
+        Alert.alert("Success", "Logged in successfully");
+      } else {
+        Alert.alert("Login Failed", result.error?.message || "Unknown error");
       }
-    } catch (error: any) {
-      Alert.alert(
-        "Login Failed",
-        error.message || "An error occurred during login"
-      );
+    } catch (err: any) {
+      Alert.alert("Login Failed", err.message || "An error occurred");
     } finally {
       setLoading(false);
     }

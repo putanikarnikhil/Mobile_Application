@@ -9,7 +9,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // -----------------------------------------------------
 
 // const API_BASE_URL = 'https://verde-backend-zchoo.ondigitalocean.app/api/v1';
-const API_BASE_URL = "https://localhost:8000/api/v1";
+// const API_BASE_URL = "https://localhost:8000/api/v1";
+//temporary local IP for testing
+const API_BASE_URL = "http://192.168.137.45:8000/api/v1";
 
 // -----------------------------------------------------
 

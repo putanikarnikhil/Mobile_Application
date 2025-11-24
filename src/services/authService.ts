@@ -32,7 +32,6 @@ export interface LogoutResponse {
 class AuthService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      console.log("Credentials", credentials);
       const response = await api.post<LoginResponse>(
         "/user/login",
         credentials
@@ -52,9 +51,12 @@ class AuthService {
 
       throw new Error(response.data.message || "Login failed");
     } catch (error: any) {
+      log.debug("Inside catch block of auth service");
       if (error.response?.data?.message) {
+        log.error("API Error: ", error.response.data.message);
         throw new Error(error.response.data.message);
       }
+      log.error("Network or Other Error: ", error.message);
       throw new Error(error.message || "Network error. Please try again.");
     }
   }

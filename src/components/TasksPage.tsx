@@ -171,8 +171,6 @@ const TasksPage: React.FC<TasksPageProps> = ({
     queryFn: () => fetchUserTasks(token),
   });
 
-  log.info("Tasks fetched: ", allentasks);
-
   const filteredTasks = getFilteredTasks(
     tasks,
     appState.activeSection,
