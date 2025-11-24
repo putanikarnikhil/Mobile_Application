@@ -5,7 +5,7 @@ type fetchUserTasksProps = {
 };
 
 //TODO: Change the arg type of below function to fetchUserTasksProps later
-export async function fetchUserTasks(userObjId: string | null) {
+export async function fetchUserTasks(userObjId: string | null | undefined) {
   try {
     const response = await api.get("/task/getAll", {
       params: { userObjId },

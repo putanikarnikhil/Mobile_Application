@@ -7,39 +7,46 @@ import authService, {
 
 export interface UserResponse {
   user: UserData | null;
+  token: string | null;
   error: Error | null;
 }
 
 const authConfig = {
   userFn: async (): Promise<UserResponse> => {
     try {
-      const user = await authService.getUserData();
-      return { user, error: null };
+      const { user, token } = await authService.getUserData();
+
+      return {
+        user,
+        token,
+        error: null,
+      };
     } catch (error: any) {
-      return { user: null, error };
+      return {
+        user: null,
+        token: null,
+        error,
+      };
     }
   },
 
   loginFn: async (credentials: LoginCredentials): Promise<UserResponse> => {
     try {
       const response: LoginResponse = await authService.login(credentials);
+      const { user, token } = response;
 
-      // response contains: { user, token, success }
-      const { user } = response;
-
-      return { user, error: null };
+      return { user, token, error: null };
     } catch (error: any) {
-      return { user: null, error };
+      return { user: null, token: null, error };
     }
   },
 
   registerFn: async (credentials: any): Promise<UserResponse> => {
     try {
-      // You can replace this once you build your real register API
       const response = await authService.login(credentials);
-      return { user: response.user, error: null };
+      return { user: response.user, token: response.token, error: null };
     } catch (error: any) {
-      return { user: null, error };
+      return { user: null, token: null, error };
     }
   },
 

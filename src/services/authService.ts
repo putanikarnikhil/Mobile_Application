@@ -83,13 +83,26 @@ class AuthService {
     }
   }
 
-  async getUserData(): Promise<UserData | null> {
+  async getUserData(): Promise<{
+    user: UserData | null;
+    token: string | null;
+  }> {
     try {
-      const userData = await AsyncStorage.getItem("userData");
-      return userData ? JSON.parse(userData) : null;
+      const [userData, token] = await Promise.all([
+        AsyncStorage.getItem("userData"),
+        AsyncStorage.getItem("token"),
+      ]);
+
+      return {
+        user: userData ? JSON.parse(userData) : null,
+        token: token ?? null,
+      };
     } catch (error) {
       console.error("Error getting user data:", error);
-      return null;
+      return {
+        user: null,
+        token: null,
+      };
     }
   }
 

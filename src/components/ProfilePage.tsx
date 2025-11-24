@@ -19,6 +19,7 @@ import { styles as globalStyles, ColorConstants } from "../AppStyles";
 import { User } from "../App";
 import { RootStackScreenProps } from "../navigation/types";
 import authService from "../services/authService";
+import { useLogout } from "../lib/auth-config";
 
 type ProfilePageNavigationProps = RootStackScreenProps<"ProfileModal">;
 
@@ -81,6 +82,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
       setProfileImage(result.assets[0].uri);
     }
   };
+
+  const { mutate: logout } = useLogout();
 
   const handleLogout = async () => {
     Alert.alert(

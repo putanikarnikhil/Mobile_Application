@@ -22,6 +22,7 @@ import { useAuth } from "../stores/auth-context";
 import { log } from "../config/logger-config";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../services/get-user-tasks";
+import { useUser } from "../lib/auth-config";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -161,15 +162,25 @@ const TasksPage: React.FC<TasksPageProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<TasksPageNavigationProp>();
-  const { user, token } = useAuth();
-  log.info("Auth page: ", user);
-  log.info("User token: ", token);
+  const { data: userData } = useUser();
+  const user = userData?.user;
+  const id = userData?.user?._id;
+
+  log.info("User data in TasksPage:", user);
+  log.info("User id data in TasksPage:", id);
+  // log.info("Token data in TasksPage:", token);
+
+  const token = userData?.token;
 
   //tanstack api call
-  const allentasks = useQuery({
-    queryKey: ["tasks", token],
-    queryFn: () => fetchUserTasks(token),
+  const { data, error, status } = useQuery({
+    queryKey: ["tasks", id],
+    queryFn: () => fetchUserTasks(id),
+    enabled: !!token,
   });
+
+  log.info("User tasks in Taskspage:", data);
+  log.info("Tasks error in Taskspage:", error);
 
   const filteredTasks = getFilteredTasks(
     tasks,

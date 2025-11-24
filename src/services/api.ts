@@ -1,5 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { log } from "../config/logger-config";
 
 // -----------------------------------------------------
 // BACKEND DEPLOYED IN CLOUD
@@ -27,6 +28,9 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
+    log.info("Sending Token:", token);
+
+    log.info("Request Headers:", config.headers);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -40,7 +44,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem("authToken");
+      await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("userData");
     }
     return Promise.reject(error);
