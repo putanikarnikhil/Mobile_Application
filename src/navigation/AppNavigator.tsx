@@ -5,6 +5,7 @@ import AuthStackNavigator from "./AuthStack";
 import RootNavigator from "./RootNavigator";
 import type { Task, AppState } from "../App";
 import { log } from "../config/logger-config";
+import { useUser } from "../lib/auth-config";
 
 interface Props {
   tasks: Task[];
@@ -22,11 +23,11 @@ interface Props {
 }
 
 const AppNavigator: React.FC<Props> = (props) => {
-  const { user } = useAuth();
-  log.info("User details in root: ", user);
+  const { data: user } = useUser();
+  log.debug("AppNavigator rendered with user:", user?.user);
   return (
     <NavigationContainer>
-      {user ? (
+      {user?.user ? (
         <RootNavigator
           tasks={props.tasks}
           appState={props.appState}

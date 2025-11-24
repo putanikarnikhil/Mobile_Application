@@ -32,7 +32,7 @@ export interface LogoutResponse {
 class AuthService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // console.log("kol", credentials);
+      console.log("Credentials", credentials);
       const response = await api.post<LoginResponse>(
         "/user/login",
         credentials
@@ -59,9 +59,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Logout user
-   */
   async logout(): Promise<LogoutResponse> {
     try {
       const response = await api.get<LogoutResponse>("/user/logout");
@@ -84,9 +81,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Get stored user data
-   */
   async getUserData(): Promise<UserData | null> {
     try {
       const userData = await AsyncStorage.getItem("userData");
@@ -97,9 +91,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Check if user is authenticated
-   */
   async isAuthenticated(): Promise<boolean> {
     const userData = await this.getUserData();
     return userData !== null;

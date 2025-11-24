@@ -55,14 +55,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     loadSession();
   }, []);
 
-  //get user method
-  const getUser = async () => {
-    const token = await AsyncStorage.getItem("token");
-    const user = await AsyncStorage.getItem("userData");
-    if (token) return user;
-    else return null;
-  };
-
   // Login method
   const login = async (token: string, user: User) => {
     setToken(token);

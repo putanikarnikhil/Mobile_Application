@@ -1,15 +1,12 @@
 // App.tsx
 import React, { useState, useMemo } from "react";
-import { View, StyleSheet } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import AuthStackNavigator from "./navigation/AuthStack";
-import RootNavigator from "./navigation/RootNavigator";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { ColorConstants } from "./AppStyles";
-import { AuthProvider, useAuth } from "./stores/auth-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { queryConfig } from "./lib/react-query-config";
-import { log } from "./config/logger-config";
 import AppNavigator from "./navigation/AppNavigator";
+import { AuthLoader } from "./lib/auth-config";
+import { AuthProvider } from "./stores/auth-context";
 
 export interface User {
   name: string;
@@ -268,16 +265,30 @@ const App: React.FC = () => {
     <View style={styles.container}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppNavigator
-            tasks={tasks}
-            appState={appState}
-            setAppState={setAppAuthState}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            profileImage={profileImage}
-            setProfileImage={setProfileImage}
-            setActiveSection={setActiveSection}
-          />
+          <AuthLoader
+            renderLoading={() => (
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ActivityIndicator size="large" />
+              </View>
+            )}
+          >
+            <AppNavigator
+              tasks={tasks}
+              appState={appState}
+              setAppState={setAppAuthState}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              profileImage={profileImage}
+              setProfileImage={setProfileImage}
+              setActiveSection={setActiveSection}
+            />
+          </AuthLoader>
         </AuthProvider>
       </QueryClientProvider>
     </View>
