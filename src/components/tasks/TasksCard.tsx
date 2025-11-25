@@ -23,37 +23,42 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onSelectTask }) => {
     <TouchableOpacity onPress={() => onSelectTask(task)}>
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <Text style={styles.orderId}>Order: {task.orderId}</Text>
-          <View
+          <View>
+            <Text style={styles.orderId}>Order: {task.orderId}</Text>
+            <Text style={styles.taskId}>Task id: {task.taskId}</Text>
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.label}>Due Date:</Text>
+            <Text style={styles.value}>
+              {new Date(task.dueDate).toLocaleDateString()}
+            </Text>
+          </View>
+          {/* <View
             style={[styles.priorityBadge, styles[`priority_${task.priority}`]]}
           >
             <Text style={styles.priorityText}>{task.priority}</Text>
+          </View> */}
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 20,
+          }}
+        >
+          <View style={styles.section}>
+            <Text style={styles.label}>Factory:</Text>
+            <Text style={styles.value}>{task.factory}</Text>
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.label}>Stage:</Text>
+            <Text style={styles.value}>{task.stageName}</Text>
           </View>
         </View>
 
-        <Text style={styles.taskId}>Task ID: {task.taskId}</Text>
-
         <View style={styles.section}>
-          <Text style={styles.label}>Factory:</Text>
-          <Text style={styles.value}>{task.factory}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Product:</Text>
+          <Text style={styles.label}>Product Details</Text>
           <Text style={styles.value}>
             {task.productType} • {task.productClass} • {task.productSubclass}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Stage:</Text>
-          <Text style={styles.value}>{task.stageName}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Due Date:</Text>
-          <Text style={styles.value}>
-            {new Date(task.dueDate).toLocaleDateString()}
           </Text>
         </View>
       </View>
