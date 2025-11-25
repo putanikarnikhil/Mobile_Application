@@ -83,7 +83,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
     }
   };
 
-  const { mutate: logout } = useLogout();
+  const { mutateAsync: logout } = useLogout();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -101,7 +101,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
             setLoggingOut(true);
 
             try {
-              await authService.logout();
+              await logout({});
 
               // Clear app state and navigate to login
               setAppState({ user: null, view: "login" });
