@@ -11,7 +11,6 @@ export async function fetchUserTasks(userObjId: string | null | undefined) {
       params: { userObjId },
     });
 
-    console.log("TASK RESPONSE:", response.data);
     return response.data;
   } catch (error) {
     console.error("ERROR FETCHING TASKS:", error);

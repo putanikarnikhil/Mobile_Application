@@ -13,16 +13,16 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { styles, ColorConstants } from "../AppStyles";
-import { Task, AppState, User } from "../App";
+import { styles, ColorConstants } from "../../AppStyles";
+import { Task, AppState, User } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { TaskStackParamList, RootStackParamList } from "../navigation/types";
-import { useAuth } from "../stores/auth-context";
-import { log } from "../config/logger-config";
+import { TaskStackParamList, RootStackParamList } from "../../navigation/types";
+import { useAuth } from "../../stores/auth-context";
+import { log } from "../../config/logger-config";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserTasks } from "../services/get-user-tasks";
-import { useUser } from "../lib/auth-config";
+import { fetchUserTasks } from "../../services/get-user-tasks";
+import { useUser } from "../../lib/auth-config";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,

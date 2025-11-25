@@ -15,9 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { styles as globalStyles, ColorConstants } from "../AppStyles";
-import { Task, LocationData } from "../App";
-import { TaskStackScreenProps } from "../navigation/types";
+import { styles as globalStyles, ColorConstants } from "../../AppStyles";
+import { Task, LocationData } from "../../App";
+import { TaskStackScreenProps } from "../../navigation/types";
 
 const useLocationFetcher = () => {
   const [location, setLocation] = useState<LocationData | null>(null);

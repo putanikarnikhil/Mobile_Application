@@ -1,8 +1,8 @@
 // navigation/TaskStack.tsx
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import TasksPage from "../components/TasksPage";
-import TaskDetailPage from "../components/TaskDetailPage";
+import TasksPage from "../components/tasks/TasksPage";
+import TaskDetailPage from "../components/tasks/TaskDetailPage";
 import { Task, AppState, User } from "../App";
 import { TaskStackParamList } from "./types";
 

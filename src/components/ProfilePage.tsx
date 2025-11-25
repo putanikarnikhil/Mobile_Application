@@ -105,7 +105,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
 
               // Clear app state and navigate to login
               setAppState({ user: null, view: "login" });
-              console.log("qpowowowowow");
 
               Alert.alert("Success", "You have been logged out successfully");
             } catch (error: any) {
