@@ -23,7 +23,7 @@ import { log } from "../../config/logger-config";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../../services/get-user-tasks";
 import { useUser } from "../../lib/auth-config";
-import { TaskCard } from "./TasksCard";
+import TaskCard, { TaskItem } from "./TasksCard";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -77,6 +77,64 @@ const getFilteredTasks = (
       task.taskId.toLowerCase().includes(lowercasedQuery)
   );
 };
+
+export const DUMMY_TASKS: TaskItem[] = [
+  {
+    orderId: "MODEL-PRO-001",
+    taskId: "OT01",
+    factory: "VISHNU CLOTHING COMPANY",
+    productType: "Pant",
+    productClass: "Formal",
+    productSubclass: "Half Sleeve",
+    stageName: "Knitting",
+    dueDate: "2025-12-03T00:00:00.000Z",
+    priority: "Low",
+  },
+  {
+    orderId: "MODEL-PRO-002",
+    taskId: "OT02",
+    factory: "PREMIUM TEXTILES LTD",
+    productType: "Shirt",
+    productClass: "Casual",
+    productSubclass: "Full Sleeve",
+    stageName: "Cutting",
+    dueDate: "2025-12-05T00:00:00.000Z",
+    priority: "High",
+  },
+  {
+    orderId: "MODEL-PRO-003",
+    taskId: "OT03",
+    factory: "STAR GARMENTS",
+    productType: "Jacket",
+    productClass: "Winter",
+    productSubclass: "Hooded",
+    stageName: "Stitching",
+    dueDate: "2025-12-10T00:00:00.000Z",
+    priority: "Medium",
+  },
+  {
+    orderId: "MODEL-PRO-004",
+    taskId: "OT04",
+    factory: "ROYAL FABRICS",
+    productType: "T-Shirt",
+    productClass: "Sports",
+    productSubclass: "Sleeveless",
+    stageName: "Finishing",
+    dueDate: "2025-12-12T00:00:00.000Z",
+    priority: "Low",
+  },
+  {
+    orderId: "MODEL-PRO-005",
+    taskId: "OT05",
+    factory: "NEW AGE FASHIONS",
+    productType: "Shorts",
+    productClass: "Casual",
+    productSubclass: "Printed",
+    stageName: "Embroidery",
+    dueDate: "2025-12-08T00:00:00.000Z",
+    priority: "High",
+  },
+];
 
 const TasksPage: React.FC<TasksPageProps> = ({
   tasks,
@@ -213,13 +271,9 @@ const TasksPage: React.FC<TasksPageProps> = ({
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onSelectTask={handleSelectTask}
-              />
+          {DUMMY_TASKS.length > 0 ? (
+            DUMMY_TASKS.map((task) => (
+              <TaskCard task={task} onSelectTask={() => {}} />
             ))
           ) : (
             <Text style={styles.noTasksText}>
