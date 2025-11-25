@@ -191,111 +191,110 @@ const TasksPage: React.FC<TasksPageProps> = ({
   };
 
   return (
-    <View style={[{ paddingTop: insets.top, flex: 1 }, styles.safeArea]}>
-      <View style={{ flex: 1 }}>
-        <StatusBar barStyle="dark-content" />
+    <View
+      style={[
+        { paddingTop: insets.top, paddingBottom: insets.bottom, flex: 1 },
+        styles.safeArea,
+      ]}
+    >
+      <StatusBar barStyle="dark-content" />
 
-        {/* FIXED HEADER */}
-        <View style={styles.header}>
-          <Text style={styles.title}>TASKS</Text>
-          <TouchableOpacity
-            onPress={handleProfilePress}
-            style={styles.profileIconContainer}
-          >
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.profileIconImage}
-              />
-            ) : (
-              <Text style={styles.profileIconText}>
-                {appState.user?.name.charAt(0).toUpperCase()}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* FIXED HORIZONTAL NAVIGATION - MOVED OUTSIDE MAIN SCROLL */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.navbar}
-          style={{
-            marginVertical: 0,
-            minHeight: 55,
-          }}
+      {/* FIXED HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Tasks</Text>
+        <TouchableOpacity
+          onPress={handleProfilePress}
+          style={styles.profileIconContainer}
         >
-          {[
-            "Active Tasks",
-            "Submitted Tasks",
-            "Completed Tasks",
-            "Rejected Tasks",
-          ].map((section) => (
-            <View key={section} style={styles.taskCategoryContainer}>
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery("");
-                  setActiveSection(section);
-                }}
+          {profileImage ? (
+            <Image
+              source={{ uri: profileImage }}
+              style={styles.profileIconImage}
+            />
+          ) : (
+            <Text style={styles.profileIconText}>
+              {appState.user?.name.charAt(0).toUpperCase()}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* FIXED HORIZONTAL NAVIGATION - MOVED OUTSIDE MAIN SCROLL */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.navbar}
+        style={{
+          marginVertical: 0,
+          minHeight: 65,
+        }}
+      >
+        {[
+          "Active Tasks",
+          "Submitted Tasks",
+          "Completed Tasks",
+          "Rejected Tasks",
+        ].map((section) => (
+          <View key={section} style={styles.taskCategoryContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                setSearchQuery("");
+                setActiveSection(section);
+              }}
+              style={[
+                styles.navItem,
+                appState.activeSection === section && styles.activeNavItem,
+              ]}
+            >
+              <Text
                 style={[
-                  styles.navItem,
-                  appState.activeSection === section && styles.activeNavItem,
+                  styles.navItemText,
+                  appState.activeSection === section &&
+                    styles.activeNavItemText,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.navItemText,
-                    appState.activeSection === section &&
-                      styles.activeNavItemText,
-                  ]}
-                >
-                  {section}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-
-        {/* MAIN VERTICAL SCROLL - NOW ONLY FOR CONTENT */}
-        <ScrollView
-          contentContainerStyle={{
-            paddingBottom: 80, // increased padding for last item
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.searchContainer}>
-            <Ionicons
-              name="search"
-              size={20}
-              color={styles.searchIcon.color}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by Order ID, Factory, or Task ID"
-              placeholderTextColor={ColorConstants.faintText}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-
-          <View style={styles.content}>
-            {DUMMY_TASKS.length > 0 ? (
-              DUMMY_TASKS.map((task) => (
-                <TaskCard
-                  key={task.taskId}
-                  task={task}
-                  onSelectTask={() => {}}
-                />
-              ))
-            ) : (
-              <Text style={styles.noTasksText}>
-                No tasks found in this section.
+                {section}
               </Text>
-            )}
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </View>
+        ))}
+      </ScrollView>
+
+      {/* MAIN VERTICAL SCROLL - NOW ONLY FOR CONTENT */}
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 20,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color={styles.searchIcon.color}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by Order ID, Factory, or Task ID"
+            placeholderTextColor={ColorConstants.faintText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <View style={styles.content}>
+          {DUMMY_TASKS.length > 0 ? (
+            DUMMY_TASKS.map((task) => (
+              <TaskCard key={task.taskId} task={task} onSelectTask={() => {}} />
+            ))
+          ) : (
+            <Text style={styles.noTasksText}>
+              No tasks found in this section.
+            </Text>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };
