@@ -192,13 +192,12 @@ const TasksPage: React.FC<TasksPageProps> = ({
 
   return (
     <View style={[{ paddingTop: insets.top, flex: 1 }, styles.safeArea]}>
-      <View>
+      <View style={{ flex: 1 }}>
         <StatusBar barStyle="dark-content" />
 
+        {/* FIXED HEADER */}
         <View style={styles.header}>
           <Text style={styles.title}>TASKS</Text>
-          {/* <Text style={styles.title}>Hey {user?.fullName}</Text> */}
-
           <TouchableOpacity
             onPress={handleProfilePress}
             style={styles.profileIconContainer}
@@ -216,11 +215,15 @@ const TasksPage: React.FC<TasksPageProps> = ({
           </TouchableOpacity>
         </View>
 
+        {/* FIXED HORIZONTAL NAVIGATION - MOVED OUTSIDE MAIN SCROLL */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.navbar}
-          style={{ marginVertical: 0 }}
+          style={{
+            marginVertical: 0,
+            minHeight: 55,
+          }}
         >
           {[
             "Active Tasks",
@@ -253,33 +256,44 @@ const TasksPage: React.FC<TasksPageProps> = ({
           ))}
         </ScrollView>
 
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={styles.searchIcon.color}
-            style={styles.searchIcon}
-          />
+        {/* MAIN VERTICAL SCROLL - NOW ONLY FOR CONTENT */}
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: 80, // increased padding for last item
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={styles.searchIcon.color}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search by Order ID, Factory, or Task ID"
+              placeholderTextColor={ColorConstants.faintText}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
 
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by Order ID, Factory, or Task ID"
-            placeholderTextColor={ColorConstants.faintText}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        <ScrollView contentContainerStyle={styles.content}>
-          {DUMMY_TASKS.length > 0 ? (
-            DUMMY_TASKS.map((task) => (
-              <TaskCard task={task} onSelectTask={() => {}} />
-            ))
-          ) : (
-            <Text style={styles.noTasksText}>
-              No tasks found in this section.
-            </Text>
-          )}
+          <View style={styles.content}>
+            {DUMMY_TASKS.length > 0 ? (
+              DUMMY_TASKS.map((task) => (
+                <TaskCard
+                  key={task.taskId}
+                  task={task}
+                  onSelectTask={() => {}}
+                />
+              ))
+            ) : (
+              <Text style={styles.noTasksText}>
+                No tasks found in this section.
+              </Text>
+            )}
+          </View>
         </ScrollView>
       </View>
     </View>
