@@ -2,6 +2,7 @@
 import { log } from "../config/logger-config";
 import api from "./api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { debugAsyncStorage } from "./api";
 
 export interface LoginCredentials {
   email: string;
@@ -32,55 +33,69 @@ export interface LogoutResponse {
 class AuthService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
+      log.info("▶ Login Request Fired");
+
       const response = await api.post<LoginResponse>(
         "/user/login",
         credentials
       );
+      const { success, user, token, message } = response.data;
 
-      log.debug("User Response: ", response.data);
-      if (response.data.success && response.data.user) {
-        // Store user data in AsyncStorage
-        await AsyncStorage.setItem(
-          "userData",
-          JSON.stringify(response.data.user)
+      if (!success || !user || !token) {
+        throw new Error(message || "Login failed");
+      }
+
+      // ✅ Check if user role is "Auditor"
+      if (user.role !== "Auditor") {
+        throw new Error(
+          "Access Denied: Only Auditors can access this application"
         );
-        await AsyncStorage.setItem("token", response.data.token);
-
-        return response.data;
       }
 
-      throw new Error(response.data.message || "Login failed");
+      // ✅ Store user data and token in AsyncStorage
+      await AsyncStorage.setItem("userData", JSON.stringify(user));
+      await AsyncStorage.setItem("token", token);
+
+      log.info("✅ Login successful - Token and user data stored");
+      debugAsyncStorage();
+
+      return response.data;
     } catch (error: any) {
-      log.debug("Inside catch block of auth service");
-      if (error.response?.data?.message) {
-        log.error("API Error: ", error.response.data.message);
-        throw new Error(error.response.data.message);
-      }
-      log.error("Network or Other Error: ", error.message);
-      throw new Error(error.message || "Network error. Please try again.");
+      log.error(
+        "❌ Login Error:",
+        error.response?.data?.message || error.message
+      );
+
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("userData");
+
+      await debugAsyncStorage(); // 👈 add await here
+
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Network error. Try again."
+      );
     }
   }
 
   async logout(): Promise<LogoutResponse> {
     try {
-      const response = await api.get<LogoutResponse>("/user/logout");
-      console.log(response);
-
-      // Clear local storage
-      await AsyncStorage.removeItem("userData");
-      await AsyncStorage.removeItem("authToken");
-
-      return response.data;
-    } catch (error: any) {
-      // Even if the API call fails, clear local data
-      await AsyncStorage.removeItem("userData");
-      await AsyncStorage.removeItem("authToken");
-
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error(error.message || "Logout failed");
+      log.info("▶ Logout Request Fired");
+      await api.get<LogoutResponse>("/user/logout");
+      log.info("✅ Logout API call successful");
+    } catch (error) {
+      log.warn("⚠ Logout request failed, but continuing cleanup...");
     }
+
+    // ✅ Always clear local storage regardless of API response
+    await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("userData");
+
+    log.info("✅ Local storage cleared");
+    debugAsyncStorage();
+
+    return { success: true, message: "Logged out successfully" };
   }
 
   async getUserData(): Promise<{
@@ -88,27 +103,35 @@ class AuthService {
     token: string | null;
   }> {
     try {
-      const [userData, token] = await Promise.all([
-        AsyncStorage.getItem("userData"),
-        AsyncStorage.getItem("token"),
-      ]);
+      const userData = await AsyncStorage.getItem("userData");
+      const token = await AsyncStorage.getItem("token");
 
-      return {
-        user: userData ? JSON.parse(userData) : null,
-        token: token ?? null,
-      };
+      if (userData && token) {
+        const user: UserData = JSON.parse(userData);
+
+        // ✅ Verify the stored user is still an Auditor
+        if (user.role !== "Auditor") {
+          log.warn("⚠ Stored user is not an Auditor - clearing data");
+          await this.logout();
+          return { user: null, token: null };
+        }
+
+        return { user, token };
+      }
+
+      return { user: null, token: null };
     } catch (error) {
-      console.error("Error getting user data:", error);
-      return {
-        user: null,
-        token: null,
-      };
+      log.error("❌ Error getting user data:", error);
+      // Clear corrupted data
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("userData");
+      return { user: null, token: null };
     }
   }
 
   async isAuthenticated(): Promise<boolean> {
-    const userData = await this.getUserData();
-    return userData !== null;
+    const { token, user } = await this.getUserData();
+    return !!token && !!user && user.role === "Auditor";
   }
 }
 
