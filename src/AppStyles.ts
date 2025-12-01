@@ -1,9 +1,8 @@
 import { StyleSheet, Platform } from "react-native";
 
 export const ColorConstants = {
-  // Brand & Primary Palette
   primaryBrand: "#0047AB",
-  primaryAccent: "#4A69E1", // Vibrant Blue (Used for button, focus border)
+  primaryAccent: "#4A69E1", 
   primaryLighter: "#8BA3FF",
 
   // Status & Feedback Colors
@@ -13,11 +12,11 @@ export const ColorConstants = {
   info: "#3498DB",
 
   // Neutral Palette
-  background: "#F0F2F5", // Light Gray Background (Main background)
-  surface: "#FFFFFF", // Pure White (Card, Header, Input Background)
-  darkText: "#2C3E50", // Dark charcoal (Used for all black text/icons)
-  mediumText: "#556677", // Muted gray
-  faintText: "#A0A7AD", // Very light gray (Placeholders)
+  background: "#F0F2F5",  
+  surface: "#FFFFFF",  
+  darkText: "#2C3E50",  
+  mediumText: "#556677", 
+  faintText: "#A0A7AD",  
 
   // Base Colors
   inputBase: "#E3E8EE",
@@ -170,10 +169,7 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
   },
-  // --- UTILITIES & DISABLED STYLES ---
-  // disabledButton: { opacity: 0.6 },
-  // disabledInput: { backgroundColor: '#ECF0F1', borderColor: ColorConstants.inputBorder },
-
+ 
   // --- TASK LIST & DETAIL STYLES ---
   header: {
     // PROFESSIONAL HEADER STYLE
@@ -182,11 +178,11 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: ColorConstants.surface, // Light background
+    backgroundColor: ColorConstants.surface, 
     borderBottomWidth: 1,
     borderBottomColor: ColorConstants.inputBorder,
     shadowColor: ColorConstants.shadow,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
@@ -195,7 +191,7 @@ export const styles = StyleSheet.create({
     // "TASKS" Title
     fontSize: 24,
     fontWeight: "800",
-    color: ColorConstants.darkText, // BLACK TITLE TEXT
+    color: ColorConstants.darkText,  
     letterSpacing: 0.5,
   },
   profileIconContainer: {
@@ -206,7 +202,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: ColorConstants.darkText, // BLACK ICON BORDER
+    borderColor: ColorConstants.darkText,  
     overflow: "hidden",
   },
   profileIconImage: {
@@ -214,16 +210,17 @@ export const styles = StyleSheet.create({
     height: "100%",
   },
   profileIconText: {
-    color: ColorConstants.darkText, // BLACK PROFILE TEXT
+    color: ColorConstants.darkText,  
     fontWeight: "bold",
     fontSize: 22,
   },
   // --- NAV BAR STYLES (PROFESSIONAL FIX) ---
-  navbar: {
-    flexDirection: "row",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-  },
+navbar: {
+  flexDirection: "row",
+  paddingHorizontal: 15,
+  paddingTop: 5,  
+  paddingBottom: 5,  
+},
   taskCategoryContainer: {
     marginRight: 10,
   },
@@ -261,7 +258,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: ColorConstants.surface,
     borderRadius: 15,
-    marginVertical: 15, // Increased vertical margin for separation
+    marginVertical: 5, 
     marginHorizontal: 15,
     paddingHorizontal: 15,
     shadowColor: ColorConstants.shadow,
@@ -274,13 +271,13 @@ export const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 10,
-    color: ColorConstants.darkText, // BLACK ICON
+    color: ColorConstants.darkText,  
   },
   searchInput: {
     flex: 1,
     height: 48,
     fontSize: 16,
-    color: ColorConstants.darkText, // BLACK INPUT TEXT
+    color: ColorConstants.darkText,  
   },
   content: {
     paddingHorizontal: 15,

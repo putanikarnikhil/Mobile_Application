@@ -203,7 +203,7 @@ const App: React.FC = () => {
                 submittedOn: new Date().toISOString(),
                 location: locationData,
               }
-            : task.submissionData; // Preserve existing if no new location data
+            : task.submissionData; 
 
           return {
             ...task,
@@ -242,7 +242,7 @@ const App: React.FC = () => {
       setComment: setTempComment,
 
       updateTaskStatus: updateTaskStatus,
-      setProfileImage: setProfileImage, // Also include profile setter here for convenience
+      setProfileImage: setProfileImage,  
     }),
     [
       appAuthState.user,

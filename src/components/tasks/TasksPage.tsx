@@ -1,5 +1,5 @@
 // components/TasksPage.tsx
-import React, { useState } from "react";
+import React from "react";
 import {
   StyleSheet,
   View,
@@ -9,7 +9,7 @@ import {
   TextInput,
   StatusBar,
   Image,
-  ViewStyle,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,8 +18,6 @@ import { Task, AppState, User } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { TaskStackParamList, RootStackParamList } from "../../navigation/types";
-import { useAuth } from "../../stores/auth-context";
-import { log } from "../../config/logger-config";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../../services/get-user-tasks";
 import { useUser } from "../../lib/auth-config";
@@ -50,28 +48,7 @@ const getFilteredTasks = (
   searchQuery: string
 ): Task[] => {
   const lowercasedQuery = searchQuery.toLowerCase();
-  let filteredBySection: Task[];
-  switch (activeSection) {
-    case "Active Tasks":
-      filteredBySection = tasksList.filter(
-        (task) => task.isOverdue || task.status === "Pending Review"
-      );
-      break;
-    case "Submitted Tasks":
-      filteredBySection = tasksList.filter((task) => task.isSubmitted);
-      break;
-    case "Completed Tasks":
-      // Filter specifically for Completed Tasks
-      filteredBySection = tasksList.filter((task) => task.isCompleted);
-      break;
-    case "Rejected Tasks":
-      // Filter specifically for Rejected Tasks
-      filteredBySection = tasksList.filter((task) => task.isRejected);
-      break;
-    default:
-      filteredBySection = tasksList;
-  }
-  return filteredBySection.filter(
+  return tasksList.filter(
     (task) =>
       task.orderId.toLowerCase().includes(lowercasedQuery) ||
       task.factory.toLowerCase().includes(lowercasedQuery) ||
@@ -91,11 +68,9 @@ const TasksPage: React.FC<TasksPageProps> = ({
   const navigation = useNavigation<TasksPageNavigationProp>();
   const { data: userData } = useUser();
   const id = userData?.user?._id;
-
   const token = userData?.token;
 
-  //tanstack api call
-  const { data, error } = useQuery({
+  const { data, refetch, isFetching } = useQuery({
     queryKey: ["tasks", id],
     queryFn: () => fetchUserTasks({ userObjId: id }),
     enabled: !!token,
@@ -103,19 +78,26 @@ const TasksPage: React.FC<TasksPageProps> = ({
 
   const updatedTasks: TaskItem[] = mapApiResponseToTasks(data?.data || []);
 
-  const filteredTasks = getFilteredTasks(
-    tasks,
-    appState.activeSection,
-    searchQuery
-  );
-
-  const handleSelectTask = (task: Task) => {
-    if (appState.setImages) appState.setImages(task.photos);
-    if (appState.setComment) appState.setComment(task.comments);
-
-    console.log("Task has been clicked");
-
-    navigation.navigate("TaskDetail", { task });
+  const handleSelectTask = (selectedTask: TaskItem) => {
+    navigation.navigate("TaskDetail", {
+      task: {
+        ...selectedTask,
+        id: selectedTask.taskId,
+        orderStageId: "",
+        photos: [],
+        comments: "",
+        stage: selectedTask.stageName,
+        product: `${selectedTask.productType} ${selectedTask.productClass} ${selectedTask.productSubclass}`,
+        stageStatus: "Active",
+        taskType: "Audit",
+        status: "Pending Review",
+        isOverdue: false,
+        isSubmitted: false,
+        isCompleted: false,
+        isRejected: false,
+        submissionData: undefined,
+      },
+    });
   };
 
   const handleProfilePress = () => {
@@ -136,7 +118,6 @@ const TasksPage: React.FC<TasksPageProps> = ({
     >
       <StatusBar barStyle="dark-content" />
 
-      {/* FIXED HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Tasks</Text>
         <TouchableOpacity
@@ -156,20 +137,16 @@ const TasksPage: React.FC<TasksPageProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* FIXED HORIZONTAL NAVIGATION - MOVED OUTSIDE MAIN SCROLL */}
+      {/* Horizontal Nav - MinHeight removed to fix spacing */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.navbar}
-        style={{
-          marginVertical: 0,
-          minHeight: 65,
-        }}
       >
         {[
           "Pending Tasks",
           "Completed Tasks",
-          "Accepted Tasks",
+          "Submitted Tasks",
           "Rejected Tasks",
         ].map((section) => (
           <View key={section} style={styles.taskCategoryContainer}>
@@ -197,13 +174,17 @@ const TasksPage: React.FC<TasksPageProps> = ({
         ))}
       </ScrollView>
 
-      {/* MAIN VERTICAL SCROLL - NOW ONLY FOR CONTENT */}
-      <ScrollView
-        contentContainerStyle={{
-          paddingBottom: 20,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
+      {/* Main List - With Pull To Refresh */}
+<ScrollView
+  contentContainerStyle={{
+    paddingBottom: 20, // 👈 reduced
+  }}
+  showsVerticalScrollIndicator={false}
+  refreshControl={
+    <RefreshControl refreshing={isFetching} onRefresh={refetch} />
+  }
+>
+
         <View style={styles.searchContainer}>
           <Ionicons
             name="search"
@@ -223,7 +204,11 @@ const TasksPage: React.FC<TasksPageProps> = ({
         <View style={styles.content}>
           {updatedTasks.length > 0 ? (
             updatedTasks.map((task) => (
-              <TaskCard key={task.taskId} task={task} onSelectTask={() => {}} />
+              <TaskCard
+                key={task.taskId}
+                task={task}
+                onSelectTask={handleSelectTask}
+              />
             ))
           ) : (
             <Text style={styles.noTasksText}>

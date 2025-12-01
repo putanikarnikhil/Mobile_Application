@@ -7,6 +7,7 @@ interface TaskCardProps {
 }
 
 export interface TaskItem {
+  status: string;
   orderId: string;
   taskId: string;
   factory: string;
