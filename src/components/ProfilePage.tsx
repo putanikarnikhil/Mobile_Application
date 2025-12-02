@@ -1,4 +1,3 @@
-// components/ProfilePage.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -8,254 +7,256 @@ import {
   TextInput,
   Alert,
   Image,
-  Platform,
   ScrollView,
   ActivityIndicator,
+  StyleSheet,
+  Clipboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { styles as globalStyles, ColorConstants } from "../AppStyles";
-import { User } from "../App";
-import { RootStackScreenProps } from "../navigation/types";
-import authService from "../services/authService";
 import { useLogout } from "../lib/auth-config";
+import { ColorConstants } from "../AppStyles";
 
-type ProfilePageNavigationProps = RootStackScreenProps<"ProfileModal">;
-
-interface ProfilePageProps extends ProfilePageNavigationProps {
-  user: User;
+type ProfilePageProps = {
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
   profileImage: string | null;
-  setProfileImage: React.Dispatch<React.SetStateAction<string | null>>;
+  setProfileImage: (img: string | null) => void;
   onGoBack: () => void;
-  setAppState: (newState: {
-    user: User | null;
-    view: "login" | "tasks";
-  }) => void;
-}
+  setAppState: (v: any) => void;
+  navigation: any;
+};
 
-const ProfilePage: React.FC<ProfilePageProps> = ({
+export default function ProfilePage({
   user,
   profileImage,
   setProfileImage,
   onGoBack,
   setAppState,
   navigation,
-}) => {
+}: ProfilePageProps) {
   const insets = useSafeAreaInsets();
-  const [isEditingName, setIsEditingName] = useState<boolean>(false);
-  const [editableName, setEditableName] = useState<string>(user?.name || "");
-  const [loggingOut, setLoggingOut] = useState<boolean>(false);
-
-  useEffect(() => {
-    (async () => {
-      if (Platform.OS !== "web") {
-        const { status: mediaLibraryStatus } =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        const { status: cameraStatus } =
-          await ImagePicker.requestCameraPermissionsAsync();
-        if (mediaLibraryStatus !== "granted" || cameraStatus !== "granted") {
-          Alert.alert(
-            "Permission Required",
-            "Please enable camera and media library permissions in your phone settings to set a profile picture."
-          );
-        }
-      }
-    })();
-  }, []);
-
-  const handleSaveName = () => {
-    user.name = editableName;
-    setIsEditingName(false);
-    console.log("Name Updated", `Your new name is: ${editableName}`);
-  };
-
-  const handleProfileImagePicker = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
-    }
-  };
-
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(user.name);
+  const [loading, setLoading] = useState(false);
   const { mutateAsync: logout } = useLogout();
 
-  const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            setLoggingOut(true);
+  const initial = user.name.charAt(0).toUpperCase();
 
-            try {
-              await logout({});
-
-              // Clear app state and navigate to login
-              setAppState({ user: null, view: "login" });
-
-              Alert.alert("Success", "You have been logged out successfully");
-            } catch (error: any) {
-              // Even if API fails, clear local state
-              setAppState({ user: null, view: "login" });
-
-              console.error("Logout error:", error);
-              Alert.alert(
-                "Logged Out",
-                error.message || "You have been logged out"
-              );
-            } finally {
-              setLoggingOut(false);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+  const pickImage = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+    if (!res.canceled) setProfileImage(res.assets[0].uri);
   };
 
-  const handleNotificationsPress = () => {
-    navigation.navigate("NotificationsModal");
+  const handleLogout = () => {
+    Alert.alert("Logout", "Do you want to exit your session?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          setLoading(true);
+          await logout({});
+          setAppState({ user: null, view: "login" });
+          setLoading(false);
+        },
+      },
+    ]);
+  };
+
+  const copyID = () => {
+    Clipboard.setString(user._id);
+    Alert.alert("Copied", "User ID copied successfully!");
   };
 
   return (
-    <View
-      style={[
-        { paddingTop: insets.top, flex: 1 },
-        globalStyles.profileSafeArea,
-      ]}
-    >
-      <StatusBar barStyle="dark-content" />
+    <View style={{ flex: 1, backgroundColor: "#F5F7FB" }}>
+      <StatusBar barStyle="light-content" />
 
-      {/* Header Bar */}
-      <View style={globalStyles.profileHeader}>
-        <Text style={globalStyles.profileTitle}>Profile</Text>
-        <TouchableOpacity onPress={onGoBack} disabled={loggingOut}>
-          <Ionicons name="close" size={24} color={ColorConstants.darkText} />
+      {/* Premium Gradient Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={onGoBack} style={styles.close}>
+          <Ionicons name="arrow-back" size={26} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
+
+      {/* Avatar Floating */}
+      <View style={styles.avatarWrap}>
+        <TouchableOpacity onPress={pickImage}>
+          {profileImage ? (
+            <Image source={{ uri: profileImage }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>{initial}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity onPress={pickImage} style={styles.editAvatar}>
+          <Ionicons name="camera" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={globalStyles.profileScrollView}>
-        <View style={globalStyles.profileContent}>
-          {/* Avatar Section */}
-          <TouchableOpacity
-            style={globalStyles.profileAvatarContainer}
-            onPress={handleProfileImagePicker}
-            disabled={loggingOut}
-          >
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={globalStyles.profileAvatarImage}
-              />
-            ) : (
-              <Ionicons
-                name="mail"
-                size={70}
-                color={ColorConstants.primaryAccent}
-              />
-            )}
-            <View style={globalStyles.cameraIconContainer}>
-              <Ionicons name="camera" size={20} color="#fff" />
-            </View>
-          </TouchableOpacity>
-
-          {/* Name & Email Section */}
-          {isEditingName ? (
-            <View style={globalStyles.nameEditContainer}>
+      {/* Content */}
+      <ScrollView style={{ marginTop: 60 }} contentContainerStyle={{ paddingBottom: 30 }}>
+        {/* Card - Profile Info */}
+        <View style={styles.card}>
+          {/* Editable Name */}
+          {editing ? (
+            <View style={styles.editRow}>
               <TextInput
-                style={globalStyles.profileNameInput}
-                value={editableName}
-                onChangeText={setEditableName}
+                style={styles.nameInput}
+                value={name}
+                onChangeText={setName}
                 autoFocus
-                onBlur={handleSaveName}
-                editable={!loggingOut}
+                onBlur={() => {
+                  user.name = name;
+                  setEditing(false);
+                }}
               />
-              <TouchableOpacity
-                onPress={handleSaveName}
-                style={globalStyles.nameEditIcon}
-                disabled={loggingOut}
-              >
-                <Ionicons
-                  name="checkmark"
-                  size={24}
-                  color={ColorConstants.primaryAccent}
-                />
-              </TouchableOpacity>
+              <Ionicons
+                name="checkmark-circle"
+                size={22}
+                color={ColorConstants.primaryAccent}
+                onPress={() => {
+                  user.name = name;
+                  setEditing(false);
+                }}
+              />
             </View>
           ) : (
-            <View style={globalStyles.nameDisplayContainer}>
-              <Text style={globalStyles.profileName}>{user.name}</Text>
-              <TouchableOpacity
-                onPress={() => setIsEditingName(true)}
-                style={globalStyles.nameEditIcon}
-                disabled={loggingOut}
-              >
-                <Ionicons
-                  name="pencil-outline"
-                  size={20}
-                  color={ColorConstants.faintText}
-                />
+            <View style={styles.row}>
+              <Ionicons name="person-outline" size={22} color="#6A7280" />
+              <Text style={styles.name}>{user.name}</Text>
+              <TouchableOpacity onPress={() => setEditing(true)}>
+                <Ionicons name="create-outline" size={20} color="#6A7280" />
               </TouchableOpacity>
             </View>
           )}
 
-          <Text style={globalStyles.profileEmail}>{user.email}</Text>
-
-          {/* Menu Items */}
-          <View style={globalStyles.profileMenu}>
-            <TouchableOpacity
-              style={globalStyles.profileMenuItem}
-              onPress={handleNotificationsPress}
-              disabled={loggingOut}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={22}
-                color={ColorConstants.primaryAccent}
-              />
-              <Text style={globalStyles.profileMenuItemText}>
-                Notifications
-              </Text>
-              <Ionicons
-                name="chevron-forward-outline"
-                size={22}
-                color={ColorConstants.mediumText}
-              />
-            </TouchableOpacity>
+          {/* Email */}
+          <View style={styles.row}>
+            <Ionicons name="mail-outline" size={22} color="#6A7280" />
+            <Text style={styles.text}>{user.email}</Text>
           </View>
 
-          {/* Logout Button */}
+          {/* User ID */}
+          <View style={styles.row}>
+            <Ionicons name="shield-checkmark-outline" size={22} color="#6A7280" />
+            <Text style={[styles.text, { flex: 1 }]} numberOfLines={1}>
+              {user._id}
+            </Text>
+            <TouchableOpacity onPress={copyID}>
+              <Ionicons name="copy-outline" size={20} color={ColorConstants.primaryAccent} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Menu Card */}
+        <View style={styles.card}>
           <TouchableOpacity
-            style={[globalStyles.logoutButton, loggingOut && { opacity: 0.6 }]}
-            onPress={handleLogout}
-            disabled={loggingOut}
+            style={styles.menu}
+            onPress={() => navigation.navigate("NotificationsModal")}
           >
-            {loggingOut ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={globalStyles.logoutButtonText}>Log Out</Text>
-            )}
+            <Ionicons name="notifications-outline" size={22} color={ColorConstants.primaryAccent} />
+            <Text style={styles.menuText}>Notifications</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
 
-          {/* Version Text */}
-          <Text style={globalStyles.versionText}>Version 2.1.0</Text>
+          <View style={styles.sep} />
+
+          <TouchableOpacity style={styles.menu} onPress={handleLogout} disabled={loading}>
+            <Ionicons name="log-out-outline" size={22} color={ColorConstants.danger} />
+            <Text style={[styles.menuText, { color: ColorConstants.danger }]}>Logout</Text>
+            {loading && <ActivityIndicator color={ColorConstants.danger} size="small" />}
+          </TouchableOpacity>
         </View>
+
+        <Text style={styles.version}>App Version 2.1.0</Text>
       </ScrollView>
     </View>
   );
-};
+}
 
-export default ProfilePage;
+/* -------------------------------- Styles ------------------------------- */
+const styles = StyleSheet.create({
+  header: {
+    height: 180,
+    backgroundColor: ColorConstants.primaryAccent,
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  close: { position: "absolute", left: 20, top: 15 },
+  headerTitle: { fontSize: 22, fontWeight: "700", color: "#fff" },
+
+  avatarWrap: {
+    position: "absolute",
+    top: 120,
+    alignSelf: "center",
+    zIndex: 10,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: "#fff",
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#E8EBF2",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarInitial: { fontSize: 42, fontWeight: "800", color: ColorConstants.primaryAccent },
+  editAvatar: {
+    backgroundColor: ColorConstants.primaryAccent,
+    padding: 8,
+    borderRadius: 20,
+    position: "absolute",
+    bottom: 5,
+    right: -4,
+    elevation: 4,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    padding: 20,
+    marginHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 18,
+    elevation: 6,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+  },
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 12 },
+  editRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 },
+
+  name: { flex: 1, fontSize: 19, fontWeight: "700", color: "#111" },
+  nameInput: {
+    flex: 1,
+    fontSize: 19,
+    borderBottomWidth: 1.5,
+    borderColor: ColorConstants.primaryAccent,
+    paddingBottom: 4,
+  },
+  text: { fontSize: 15, color: "#555" },
+
+  menu: { flexDirection: "row", gap: 20, alignItems: "center", paddingVertical: 14 },
+  menuText: { fontSize: 16, flex: 1, color: "#333" },
+  sep: { height: 1, backgroundColor: "#eee", marginVertical: 8 },
+
+  version: { textAlign: "center", marginTop: 12, fontSize: 12, opacity: 0.6 },
+});
