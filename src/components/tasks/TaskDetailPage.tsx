@@ -99,7 +99,7 @@ const TaskDetailPage: React.FC<TaskDetailPageProps> = ({
   const insets = useSafeAreaInsets();
   const { location, loading: locationLoading } = useLocationFetcher();
   const isCompletedOrSubmitted =
-    task.status === "Completed" || task.status === "Submitted";
+    task.status === "Completed" || task.status === "Accepted";
 
   const canPerformAction = !locationLoading && !!location;
 
@@ -166,7 +166,7 @@ const TaskDetailPage: React.FC<TaskDetailPageProps> = ({
       return;
     }
 
-    onTaskUpdate(task.id, "Submitted", images, comment, location);
+    onTaskUpdate(task.id, "Accepted", images, comment, location);
     onGoBack();
   };
 
@@ -194,11 +194,11 @@ const TaskDetailPage: React.FC<TaskDetailPageProps> = ({
       case "Overdue":
       case "Rejected":
         return { backgroundColor: ColorConstants.danger };
-      case "Submitted":
+      case "Accepted":
         return { backgroundColor: ColorConstants.warning };
       case "Completed":
         return { backgroundColor: ColorConstants.success };
-      case "Pending Review":
+      case "Pending":
       default:
         return { backgroundColor: ColorConstants.primaryAccent };
     }
