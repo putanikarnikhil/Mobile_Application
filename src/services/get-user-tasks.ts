@@ -12,7 +12,7 @@ export async function fetchUserTasks({
 }: FetchUserTasksProps) {
   try {
     const response = await api.get("/task/getAll", {
-      params: { userObjId },
+      params: { userObjId, status },
     });
 
     return response.data;

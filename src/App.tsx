@@ -27,6 +27,7 @@ export interface SubmissionData {
 }
 
 export interface Task {
+  dueDate: string | number | Date;
   id: string;
   orderId: string;
   orderStageId: string;
@@ -36,7 +37,8 @@ export interface Task {
   stage: string;
   stageStatus: "Active" | "Inactive" | "Completed";
   taskType: string;
-  status: "Pending Review" | "Submitted" | "Rejected" | "Completed" | "Overdue";
+  status: "Pending" | "Accepted" | "Completed" | "Rejected" | "Overdue";
+  priority: string;
   isOverdue: boolean;
   isSubmitted: boolean;
   isCompleted: boolean;
@@ -74,89 +76,7 @@ const mockImageUri = "https://picsum.photos/id/102/100/100";
 const mockImageUri2 = "https://picsum.photos/id/103/100/100";
 
 const INITIAL_TASKS: Task[] = [
-  {
-    id: "1",
-    orderId: "ORD-2024-001",
-    orderStageId: "STG-KNT-001",
-    taskId: "TSK-KNT-2024-001",
-    factory: "Premium Textiles Ltd",
-    product: "Cotton Polo Shirt",
-    stage: "Knitting",
-    stageStatus: "Active",
-    taskType: "Quality Check",
-    status: "Pending Review",
-    isOverdue: false,
-    isSubmitted: false,
-    isCompleted: false,
-    isRejected: false,
-    photos: [],
-    comments: "Initial inspection required.",
-  },
-  // Example of a task that has been submitted and should show audit data
-  {
-    id: "2",
-    orderId: "ORD-2024-002",
-    orderStageId: "STG-DYG-001",
-    taskId: "TSK-DYG-2024-002",
-    factory: "Bright Dyes Inc",
-    product: "Denim Fabric",
-    stage: "Dyeing",
-    stageStatus: "Active",
-    taskType: "Color Audit",
-    status: "Submitted",
-    isOverdue: false,
-    isSubmitted: true,
-    isCompleted: false,
-    isRejected: false,
-    photos: [mockImageUri, mockImageUri2, mockImageUri, mockImageUri2],
-    comments: "Task submitted successfully.",
-    submissionData: {
-      auditComment:
-        "Dye lot 4A checked. Color match is 98%. Ready for next stage.",
-      submittedOn: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-      location: {
-        latitude: 34.0522,
-        longitude: 118.2437,
-        address: "456 Dye Street, Los Angeles, CA 90013",
-      },
-    },
-  },
-  {
-    id: "3",
-    orderId: "ORD-2024-003",
-    orderStageId: "STG-FIN-001",
-    taskId: "TSK-FIN-2024-003",
-    factory: "Quick Finish Co",
-    product: "Jacket Linings",
-    stage: "Finishing",
-    stageStatus: "Active",
-    taskType: "Durability Test",
-    status: "Pending Review",
-    isOverdue: true,
-    isSubmitted: false,
-    isCompleted: false,
-    isRejected: false,
-    photos: [],
-    comments: "Urgent: Must be completed today.",
-  },
-  {
-    id: "4",
-    orderId: "ORD-2024-004",
-    orderStageId: "STG-TRM-001",
-    taskId: "TSK-TRM-2024-004",
-    factory: "Trim Master",
-    product: "Buttons & Zippers",
-    stage: "Trimming",
-    stageStatus: "Completed",
-    taskType: "Inventory Check",
-    status: "Completed",
-    isOverdue: false,
-    isSubmitted: true,
-    isCompleted: true,
-    isRejected: false,
-    photos: [mockImageUri],
-    comments: "Inventory confirmed.",
-  },
+  
 ];
 
 const App: React.FC = () => {
@@ -193,7 +113,7 @@ const App: React.FC = () => {
       prevTasks.map((task) => {
         if (task.id === taskId) {
           // Determine boolean flags based on the new status
-          const isSubmitted = newStatus === "Submitted";
+          const isSubmitted = newStatus === "Accepted";
           const isRejected = newStatus === "Rejected";
           const isCompleted = newStatus === "Completed";
 

@@ -2,7 +2,7 @@ import { StyleSheet, Platform } from "react-native";
 
 export const ColorConstants = {
   primaryBrand: "#0047AB",
-  primaryAccent: "#4A69E1", 
+  primaryAccent: "#4A69E1",
   primaryLighter: "#8BA3FF",
 
   // Status & Feedback Colors
@@ -12,11 +12,11 @@ export const ColorConstants = {
   info: "#3498DB",
 
   // Neutral Palette
-  background: "#F0F2F5",  
-  surface: "#FFFFFF",  
-  darkText: "#2C3E50",  
-  mediumText: "#556677", 
-  faintText: "#A0A7AD",  
+  background: "#F0F2F5",
+  surface: "#FFFFFF",
+  darkText: "#2C3E50",
+  mediumText: "#556677",
+  faintText: "#A0A7AD",
 
   // Base Colors
   inputBase: "#E3E8EE",
@@ -169,7 +169,7 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
   },
- 
+
   // --- TASK LIST & DETAIL STYLES ---
   header: {
     // PROFESSIONAL HEADER STYLE
@@ -178,7 +178,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: ColorConstants.surface, 
+    backgroundColor: ColorConstants.surface,
     borderBottomWidth: 1,
     borderBottomColor: ColorConstants.inputBorder,
     shadowColor: ColorConstants.shadow,
@@ -191,7 +191,7 @@ export const styles = StyleSheet.create({
     // "TASKS" Title
     fontSize: 24,
     fontWeight: "800",
-    color: ColorConstants.darkText,  
+    color: ColorConstants.darkText,
     letterSpacing: 0.5,
   },
   profileIconContainer: {
@@ -202,7 +202,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: ColorConstants.darkText,  
+    borderColor: ColorConstants.darkText,
     overflow: "hidden",
   },
   profileIconImage: {
@@ -210,17 +210,14 @@ export const styles = StyleSheet.create({
     height: "100%",
   },
   profileIconText: {
-    color: ColorConstants.darkText,  
+    color: ColorConstants.darkText,
     fontWeight: "bold",
     fontSize: 22,
   },
   // --- NAV BAR STYLES (PROFESSIONAL FIX) ---
-navbar: {
-  flexDirection: "row",
-  paddingHorizontal: 15,
-  paddingTop: 5,  
-  paddingBottom: 5,  
-},
+  navbar: {
+    flexDirection: "row",
+  },
   taskCategoryContainer: {
     marginRight: 10,
   },
@@ -229,8 +226,6 @@ navbar: {
     paddingHorizontal: 18,
     borderRadius: 25,
     backgroundColor: ColorConstants.surface,
-    justifyContent: "center",
-    alignItems: "center",
     borderWidth: 1,
     borderColor: ColorConstants.inputBorder,
   },
@@ -258,7 +253,7 @@ navbar: {
     alignItems: "center",
     backgroundColor: ColorConstants.surface,
     borderRadius: 15,
-    marginVertical: 5, 
+    marginVertical: 5,
     marginHorizontal: 15,
     paddingHorizontal: 15,
     shadowColor: ColorConstants.shadow,
@@ -271,13 +266,13 @@ navbar: {
   },
   searchIcon: {
     marginRight: 10,
-    color: ColorConstants.darkText,  
+    color: ColorConstants.darkText,
   },
   searchInput: {
     flex: 1,
     height: 48,
     fontSize: 16,
-    color: ColorConstants.darkText,  
+    color: ColorConstants.darkText,
   },
   content: {
     paddingHorizontal: 15,

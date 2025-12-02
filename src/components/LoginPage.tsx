@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Alert,
   Animated,
-  Easing,
+  Keyboard,
   Platform,
   ScrollView,
 } from "react-native";
@@ -63,25 +63,35 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
   const emailFocusAnim = useRef(new Animated.Value(0)).current;
   const passwordFocusAnim = useRef(new Animated.Value(0)).current;
   const backgroundPulseAnim = useRef(new Animated.Value(0)).current;
+  const keyboardOffset = useRef(new Animated.Value(0)).current;
 
   const { mutateAsync: login } = useLogin();
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(backgroundPulseAnim, {
-          toValue: 1,
-          duration: 10000,
-          useNativeDriver: false,
-        }),
-        Animated.timing(backgroundPulseAnim, {
-          toValue: 0,
-          duration: 10000,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
-  }, []);
+useEffect(() => {
+  const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+    const keyboardHeight = e.endCoordinates.height;
+
+    Animated.timing(keyboardOffset, {
+      toValue: -keyboardHeight / 11.11, // adaptive shift
+      duration: 280,
+      useNativeDriver: false,
+    }).start();
+  });
+
+  const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+    Animated.timing(keyboardOffset, {
+      toValue: 0,
+      duration: 280,
+      useNativeDriver: false,
+    }).start();
+  });
+
+  return () => {
+    showSub.remove();
+    hideSub.remove();
+  };
+}, []);
+
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -95,6 +105,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
 
   const onLoginPress = async () => {
     if (!validateForm()) return;
+
     setLoading(true);
 
     try {
@@ -148,15 +159,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
     };
 
     return (
-      <View style={localStyles.inputGroupContainer}>
+      <View style={styles.inputGroupContainer}>
         <Animated.Text
           style={[
-            localStyles.floatingLabel,
-            {
-              top: labelStyle.top,
-              fontSize: labelStyle.fontSize,
-              color: errorMessage ? CustomColorConstants.danger : CustomColorConstants.mediumText,
-            },
+            styles.floatingLabel,
+            { top: labelStyle.top, fontSize: labelStyle.fontSize },
           ]}
         >
           {label}
@@ -164,111 +171,87 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
 
         <View
           style={[
-            localStyles.inputWrapper,
+            styles.inputWrapper,
             {
-              borderColor:
-                errorMessage ?
-                  CustomColorConstants.danger :
-                  focused ?
-                    CustomColorConstants.primaryAccent :
-                    CustomColorConstants.inputBorder,
+              borderColor: errorMessage
+                ? CustomColorConstants.danger
+                : focused
+                ? CustomColorConstants.primaryAccent
+                : CustomColorConstants.inputBorder,
             },
           ]}
         >
-          {!isPassword ? (
-            <TextInput
-              style={localStyles.textInput}
-              value={value}
-              onChangeText={setValue}
-              secureTextEntry={false}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              editable={!loading}
-            />
-          ) : (
-            <>
-              <TextInput
-                style={localStyles.textInput}
-                value={value}
-                onChangeText={setValue}
-                secureTextEntry={!isPasswordVisible}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="default"
-                editable={!loading}
-              />
+          <TextInput
+            style={styles.textInput}
+            value={value}
+            onChangeText={setValue}
+            secureTextEntry={isPassword && !isPasswordVisible}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            autoCapitalize="none"
+            editable={!loading}
+          />
 
-              <TouchableOpacity
-                onPress={() => setIsPasswordVisible((prev) => !prev)}
-                style={localStyles.passwordToggle}
-              >
-                <Ionicons
-                  name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-                  size={20}
-                  color={CustomColorConstants.mediumText}
-                />
-              </TouchableOpacity>
-            </>
+          {isPassword && (
+            <TouchableOpacity
+              onPress={() => setIsPasswordVisible((p) => !p)}
+              style={styles.passwordToggle}
+            >
+              <Ionicons
+                name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
+                size={20}
+                color={CustomColorConstants.mediumText}
+              />
+            </TouchableOpacity>
           )}
         </View>
 
-        {errorMessage && <Text style={localStyles.errorText}>{errorMessage}</Text>}
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
       </View>
     );
   };
 
-  const bg = backgroundPulseAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#E0E8EF", "#FAFCFE"],
-  });
-
   return (
-    <View style={localStyles.container}>
-      <Animated.View style={[StyleSheet.absoluteFillObject, { backgroundColor: bg }]} />
-
+    <View style={styles.container}>
       <KeyboardAvoidingView
-        style={localStyles.keyboardAvoidingContainer}
+        style={styles.keyboardAvoidingContainer}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            paddingVertical: 25,
-          }}
+        <Animated.View
+          style={[
+            styles.loginCard,
+            { transform: [{ translateY: keyboardOffset }] },
+          ]}
         >
-          <View style={localStyles.loginCardFallback}>
-            <Image source={logoSource} style={localStyles.logoImage} />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Image source={logoSource} style={styles.logoImage} />
 
-            <Text style={localStyles.welcomeText}>Welcome Back</Text>
-            <Text style={localStyles.signInText}>Sign in to your account</Text>
+            <Text style={styles.welcomeText}>Welcome Back</Text>
+            <Text style={styles.signInText}>Sign in to your account</Text>
 
-            {renderInput("User ID (Email)", email, setEmail, emailFocusAnim, false, errors.email)}
+            {renderInput("Email", email, setEmail, emailFocusAnim, false, errors.email)}
             {renderInput("Password", password, setPassword, passwordFocusAnim, true, errors.password)}
 
-            <TouchableOpacity style={localStyles.forgotPasswordButton}>
-              <Text style={localStyles.forgotPasswordText}>Forgot password?</Text>
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={onLoginPress}
-              style={[localStyles.loginButton, loading && localStyles.disabledButton]}
+              style={[styles.loginButton, loading && styles.disabledButton]}
               disabled={loading}
             >
-              {loading ?
-                <ActivityIndicator color="#fff" /> :
-                <Text style={localStyles.loginButtonText}>LOGIN</Text>}
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginButtonText}>LOGIN</Text>
+              )}
             </TouchableOpacity>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </Animated.View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -276,35 +259,57 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
 
 export default LoginPage;
 
-const localStyles = StyleSheet.create({
-  container: {  justifyContent: "center", alignItems: "center" },
-  keyboardAvoidingContainer: { width: "100%" },
-  loginCardFallback: {
-    backgroundColor: "#fff",
-    width: "90%",
-    borderRadius: 20,
-    padding: 25,
-    alignItems: "center",
-    elevation: 8,
-  },
-  logoImage: { width: 80, height: 80, resizeMode: "contain", marginBottom: 20 },
-  welcomeText: { fontSize: 26, fontWeight: "700", marginBottom: 5 },
-  signInText: { fontSize: 15, color: "#7F8C8D", marginBottom: 30 },
-  inputGroupContainer: { width: "100%", marginBottom: 18 },
-  floatingLabel: { position: "absolute", left: 15, backgroundColor: "#fff", paddingHorizontal: 5 },
-  inputWrapper: { flexDirection: "row", borderRadius: 8, borderWidth: 1.3, height: 52, alignItems: "center" },
-  textInput: { flex: 1, height: "100%", paddingLeft: 15 },
-  passwordToggle: { paddingHorizontal: 15, height: "100%", justifyContent: "center" },
-  errorText: { color: "#e74c3c", marginTop: 4 },
-  forgotPasswordButton: { alignSelf: "flex-end", marginBottom: 25 },
-  forgotPasswordText: { fontWeight: "600", color: "#7F8C8D" },
-  loginButton: {
-    width: "100%", height: 50,
-    backgroundColor: "#2155e5ff",
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 8,
+    backgroundColor: "#FAFCFE",
   },
-  loginButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  keyboardAvoidingContainer: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loginCard: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 25,
+    elevation: 8,
+  },
+  logoImage: { width: 90, height: 90, resizeMode: "contain", alignSelf: "center", marginBottom: 20 },
+  welcomeText: { fontSize: 26, fontWeight: "700", textAlign: "center" },
+  signInText: { fontSize: 15, color: "#7F8C8D", textAlign: "center", marginBottom: 25 },
+  inputGroupContainer: { width: "100%", marginBottom: 18 },
+  floatingLabel: {
+    position: "absolute",
+    left: 15,
+    color: "#7F8C8D",
+    backgroundColor: "#fff",
+    paddingHorizontal: 5,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    borderRadius: 8,
+    borderWidth: 1.2,
+    height: 52,
+    alignItems: "center",
+  },
+  textInput: { flex: 1, height: "100%", paddingLeft: 15 },
+  passwordToggle: { paddingHorizontal: 15, height: "100%", justifyContent: "center" },
+  errorText: { color: CustomColorConstants.danger, fontSize: 12, marginTop: 4 },
+  forgotPasswordButton: { alignSelf: "flex-end", marginVertical: 10 },
+  forgotPasswordText: { fontWeight: "600", color: "#7F8C8D" },
+  loginButton: {
+    backgroundColor: CustomColorConstants.primaryAccent,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  loginButtonText: { fontSize: 18, fontWeight: "700", color: "#fff" },
   disabledButton: { opacity: 0.6 },
 });

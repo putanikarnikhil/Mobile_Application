@@ -1,66 +1,83 @@
+// components/tasks/TasksCard.tsx
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Task } from "../../App";
+import { ColorConstants } from "../../AppStyles";
 
 interface TaskCardProps {
-  task: TaskItem;
-  onSelectTask: (task: TaskItem) => void;
+  task: Task;
+  onSelectTask: (task: Task) => void;
 }
 
-export interface TaskItem {
-  status: string;
-  orderId: string;
-  taskId: string;
-  factory: string;
-  productType: string;
-  productClass: string;
-  productSubclass: string;
-  stageName: string;
-  dueDate: string; // ISO date string
-  priority: "Low" | "Medium" | "High";
-}
+const statusColors: Record<Task["status"], string> = {
+  Pending: "#F1C40F",
+  Accepted: "#2980B9",
+  Completed: "#2ECC71",
+  Rejected: "#E74C3C",
+  Overdue: "#5d75c4ff",
+};
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onSelectTask }) => {
+  const badgeColor = statusColors[task.status] ?? "#BDC3C7";
+
   return (
-    <TouchableOpacity onPress={() => onSelectTask(task)}>
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.orderId}>Order: {task.orderId}</Text>
-            <Text style={styles.taskId}>Task id: {task.taskId}</Text>
+    <TouchableOpacity
+      onPress={() => onSelectTask(task)}
+      activeOpacity={0.7}
+      style={styles.touchable}
+    >
+      <View style={[styles.card, { borderLeftColor: badgeColor }]}>
+        {/* Header Section: Order Info + Status Badge */}
+        <View style={styles.headerSection}>
+          <View style={styles.orderInfo}>
+            <Text style={styles.orderId}>{task.orderId}</Text>
+            <Text style={styles.taskId}>Task ID: {task.taskId}</Text>
           </View>
-          <View style={styles.section}>
-            <Text style={styles.label}>Due Date:</Text>
-            <Text style={styles.value}>
-              {new Date(task.dueDate).toLocaleDateString()}
-            </Text>
-          </View>
-          {/* <View
-            style={[styles.priorityBadge, styles[`priority_${task.priority}`]]}
-          >
-            <Text style={styles.priorityText}>{task.priority}</Text>
-          </View> */}
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 20,
-          }}
-        >
-          <View style={styles.section}>
-            <Text style={styles.label}>Factory:</Text>
-            <Text style={styles.value}>{task.factory}</Text>
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.label}>Stage:</Text>
-            <Text style={styles.value}>{task.stageName}</Text>
+
+          <View style={[styles.statusBadge, { backgroundColor: badgeColor }]}>
+            <Text style={styles.statusText}>{task.status}</Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Product Details</Text>
-          <Text style={styles.value}>
-            {task.productType} • {task.productClass} • {task.productSubclass}
-          </Text>
+        {/* Details Grid Section */}
+        <View style={styles.detailsGrid}>
+          {/* Row 1: Factory + Stage */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Factory</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {task.factory}
+              </Text>
+            </View>
+
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Stage</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {task.stage}
+              </Text>
+            </View>
+          </View>
+
+          {/* Row 2: Product + Due Date */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Product</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {task.product}
+              </Text>
+            </View>
+
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Due Date</Text>
+              <Text style={styles.detailValue}>
+                {new Date(task.dueDate).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -70,64 +87,79 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onSelectTask }) => {
 export default TaskCard;
 
 const styles = StyleSheet.create({
+  touchable: {
+    marginBottom: 12,
+    marginTop: 0,
+  },
   card: {
-    backgroundColor: "#fff",
-    padding: 16,
-    marginVertical: 10,
-    borderRadius: 14,
-    shadowColor: "#000",
+    backgroundColor: ColorConstants.surface,
+    borderRadius: 16,
+    padding: 18,
+    borderLeftWidth: 5,
+    shadowColor: ColorConstants.shadow,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-
-  headerRow: {
+  headerSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    alignItems: "flex-start",
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: ColorConstants.inputBase,
   },
-
+  orderInfo: {
+    flex: 1,
+  },
   orderId: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
-    color: "#222",
+    color: ColorConstants.darkText,
+    marginBottom: 4,
   },
-
   taskId: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#555",
-    marginBottom: 12,
+    fontWeight: "500",
+    color: ColorConstants.mediumText,
   },
-
-  section: {
-    marginBottom: 6,
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginLeft: 12,
   },
-
-  label: {
-    fontSize: 13,
-    color: "#999",
-  },
-
-  value: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
-
-  // Priority Badge
-  priorityBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-  },
-  priorityText: {
+  statusText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#fff",
+    color: ColorConstants.surface,
+    textTransform: "capitalize",
   },
-
-  priority_Low: { backgroundColor: "#4CAF50" },
-  priority_Medium: { backgroundColor: "#FF9800" },
-  priority_High: { backgroundColor: "#F44336" },
+  detailsGrid: {
+    gap: 12,
+  },
+  detailRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  detailItem: {
+    flex: 1,
+    minWidth: 0, // Important for text truncation in flex items
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: ColorConstants.faintText,
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  detailValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: ColorConstants.darkText,
+    lineHeight: 20,
+  },
 });
