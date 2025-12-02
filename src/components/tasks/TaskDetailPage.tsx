@@ -297,16 +297,51 @@ const TaskDetailPage: React.FC<TaskDetailPageProps> = ({
           {renderDetailItem("Task Status:", task.status, true)}
         </View>
 
-        {isCompletedOrSubmitted &&
-          task.photos.length > 0 &&
-          renderAuditedPhotos(task.photos)}
-        {isCompletedOrSubmitted &&
-          task.submissionData &&
-          task.submissionData.auditComment &&
-          renderAuditedComments(task.submissionData.auditComment)}
-        {isCompletedOrSubmitted &&
-          task.submissionData &&
-          renderAuditedLocation(task.submissionData)}
+{isCompletedOrSubmitted && task.photos.length > 0 && (
+  renderAuditedPhotos(task.photos)
+)}
+
+/* Display remarks from backend */
+{isCompletedOrSubmitted && task.remarks && (
+  <View style={globalStyles.detailSection}>
+    <Text style={globalStyles.commentsTitle}>Remarks</Text>
+    <View style={detailStyles.commentDisplayBox}>
+      <Text style={detailStyles.commentText}>{task.remarks}</Text>
+    </View>
+  </View>
+)}
+
+/* Display map/location */
+{isCompletedOrSubmitted && task.address && (
+  <View style={globalStyles.detailSection}>
+    <View style={globalStyles.locationHeader}>
+      <Ionicons
+        name="location"
+        size={20}
+        color={ColorConstants.primaryAccent}
+      />
+      <Text style={globalStyles.locationTitle}>Audit Location</Text>
+    </View>
+
+    <Text style={detailStyles.locationText}>
+      Latitude: {task.address.latitude}
+    </Text>
+    <Text style={detailStyles.locationText}>
+      Longitude: {task.address.longitude}
+    </Text>
+    <Text style={detailStyles.locationText}>
+      Address: {task.address.fullAddress}
+    </Text>
+  </View>
+)}
+
+/* Display audited time */
+{isCompletedOrSubmitted && task.completedOn && (
+  <Text style={globalStyles.lastUpdatedText}>
+    Audited On: {new Date(task.completedOn).toLocaleDateString()}
+  </Text>
+)}
+
 
         {!isCompletedOrSubmitted && (
           <>

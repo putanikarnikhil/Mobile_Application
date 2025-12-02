@@ -22,7 +22,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../../services/get-user-tasks";
 import { useUser } from "../../lib/auth-config";
 import TaskCard from "./TasksCard";
-import { mapApiResponseToTasks } from "../../utils/transformations/task-transform";
+import { mapApiItemToTask } from  "../../utils/transformations/task-transform"
+
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -65,12 +66,29 @@ const TasksPage: React.FC<TasksPageProps> = ({
     enabled: !!token,
   });
 
-  const updatedTasks: Task[] =
-    mapApiResponseToTasks(data?.data || []).filter((t) =>
-      [t.orderId, t.taskId, t.factory].some((v) =>
-        v?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    ) || [];
+// Debug: raw backend response
+console.log("RAW BACKEND DATA:", data);
+
+// FIX: Backend returns array, not data.data
+const rawTasks = data?.data ?? [];
+
+
+// Convert backend -> Task model
+const mappedTasks: Task[] = rawTasks.map((item: any) =>
+  mapApiItemToTask(item)
+);
+
+// Debug mapped result (temporary)
+console.log("MAPPED TASKS:", mappedTasks);
+
+// Apply search filter
+const updatedTasks: Task[] = mappedTasks.filter((t) =>
+  [t.orderId, t.taskId, t.factory].some((v) =>
+    v?.toString().toLowerCase().includes(searchQuery.toLowerCase())
+  )
+);
+
+
 
   const handleSelectTask = (task: Task) => {
     navigation.navigate("TaskDetail", { task });

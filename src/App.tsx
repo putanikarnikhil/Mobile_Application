@@ -27,6 +27,14 @@ export interface SubmissionData {
 }
 
 export interface Task {
+    address?: {
+    latitude: number;
+    longitude: number;
+    fullAddress: string;
+  } | null;
+  rejectionReason?: string | null;
+  remarks?: string | null;
+  completedOn?: string | null;
   dueDate: string | number | Date;
   id: string;
   orderId: string;
@@ -48,6 +56,8 @@ export interface Task {
 
   // CRITICAL FIX: Add the optional submissionData property
   submissionData?: SubmissionData;
+
+  
 }
 
 // Define the root application state structure
