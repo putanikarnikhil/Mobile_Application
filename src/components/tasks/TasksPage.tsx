@@ -39,7 +39,7 @@ interface TasksPageProps {
   setActiveSection: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const TABS = ["Pending", "Accepted", "Completed", "Rejected"];
+const TABS = ["Pending", "Completed", "Accepted","Rejected"];
 
 const TasksPage: React.FC<TasksPageProps> = ({
   appState,

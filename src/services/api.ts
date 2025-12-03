@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { log } from "../config/logger-config";
 
 // LOCAL API URL
-const API_BASE_URL = "http://192.168.0.197:8000/api/v1";
+const API_BASE_URL = "http://192.168.100.238:8000/api/v1";
 
 export const debugAsyncStorage = async () => {
   try {
