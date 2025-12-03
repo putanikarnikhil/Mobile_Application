@@ -1,33 +1,37 @@
 import { Task, User } from "../App";
 import { StackScreenProps } from "@react-navigation/stack";
 
-// --- 1. Auth Stack ---
+// 1️⃣ Auth Stack
 export type AuthStackParamList = {
   Login: undefined;
 };
 
-// --- 2. Task Stack (Nested within MainTabs) ---
+// 2️⃣ Task Stack
 export type TaskStackParamList = {
-  TasksList: undefined;
+  TasksList: { autoSelectTab?: string } | undefined; // Allow tab param
   TaskDetail: { task: Task };
 };
 
-// --- 3. Main Tabs ---
+// 3️⃣ Main Tabs
 export type MainTabsParamList = {
-  HomeTab: undefined;
+  HomeTab: {
+    screen?: keyof TaskStackParamList;
+    params?: TaskStackParamList["TasksList"];
+  } | undefined;
 };
 
-// --- 4. Root Stack (Handles Tabs and Modals) ---
+// 4️⃣ Root Stack
 export type RootStackParamList = {
-  MainTabs: undefined;
+  MainTabs: {
+    screen?: keyof MainTabsParamList;
+    params?: MainTabsParamList[keyof MainTabsParamList];
+  } | undefined;
   ProfileModal: { user: User; profileImage: string | null };
   NotificationsModal: undefined;
 };
 
-// --- Utility Types ---
-// Exported for use in components/screens
+// Utility Types
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
   StackScreenProps<RootStackParamList, T>;
-
 export type TaskStackScreenProps<T extends keyof TaskStackParamList> =
   StackScreenProps<TaskStackParamList, T>;

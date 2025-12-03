@@ -1,4 +1,4 @@
-// components/tasks/TaskDetailPage_D.tsx
+// components/tasks/TaskDetailPage.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -35,11 +35,11 @@ type Props = {
     imgs: string[],
     comment: string,
     location?: LocationData
-  ) => void;
+  ) => void; // 👈 VOID, NOT Promise
   onGoBack: () => void;
 } & TaskStackScreenProps<"TaskDetail">;
 
-const TaskDetailPage_D: React.FC<Props> = ({
+const TaskDetailPage: React.FC<Props> = ({
   task,
   images,
   setImages,
@@ -55,7 +55,7 @@ const TaskDetailPage_D: React.FC<Props> = ({
   const [full, setFull] = useState(false);
   const [index, setIndex] = useState(0);
 
-  const isDone = task.status === "Accepted" || task.status === "Completed";
+  const isDone = task.status === "Accepted" || task.status === "Completed" || task.status === "Rejected";
 
   useEffect(() => {
     (async () => {
@@ -83,29 +83,38 @@ const TaskDetailPage_D: React.FC<Props> = ({
 
   const handlePhoto = async () => {
     if (!location)
-      return Alert.alert("Location Required", "Enable location for audit verification");
+      return Alert.alert(
+        "Location Required",
+        "Enable location for audit verification"
+      );
 
     const res = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!res.canceled) setImages([...images, res.assets[0].uri]);
   };
 
   const submit = (status: Task["status"]) => {
-    if (status === "Accepted" && images.length === 0)
+    // 1️⃣ Validation: Completed must have at least 1 photo
+    if (status === "Completed" && images.length === 0) {
       return Alert.alert("Missing Photo", "Upload at least 1 inspection photo");
+    }
 
-onTaskUpdate(task.id, status, images, comment, location ?? undefined);
+    // 2️⃣ Update task (parent handles backend / state)
+    onTaskUpdate(task.id, status, images, comment, location ?? undefined);
 
-const parentNav = navigation.getParent();
+    // 3️⃣ Navigate to correct tab
+    const parentNav = navigation.getParent(); // RootStack
 
-if (status === "Accepted") {
-  parentNav?.navigate("MainTabs", { screen: "Completed" });
-} else if (status === "Rejected") {
-  parentNav?.navigate("MainTabs", { screen: "Rejected" });
-}
+    const autoSelectTab = status === "Completed" ? "Completed" : "Rejected";
 
+    parentNav?.navigate("MainTabs", {
+      screen: "HomeTab",
+      params: {
+        screen: "TasksList",
+        params: { autoSelectTab },
+      },
+    });
   };
 
-  
   const renderDetailItem = (
     label: string,
     value: string | number,
@@ -155,13 +164,17 @@ if (status === "Accepted") {
           {renderDetailItem("Task Status:", task.status, true)}
         </View>
 
-        {/* Photos FIRST for audit priority */}
+        {/* Photos */}
         <View style={ui.card}>
           <Text style={ui.sectionTitle}>Inspection Photos</Text>
 
           {!isDone && (
             <TouchableOpacity style={ui.captureBtn} onPress={handlePhoto}>
-              <Ionicons name="camera-outline" size={30} color={ColorConstants.primaryAccent} />
+              <Ionicons
+                name="camera-outline"
+                size={30}
+                color={ColorConstants.primaryAccent}
+              />
               <Text style={ui.captureText}>Take Photo</Text>
             </TouchableOpacity>
           )}
@@ -202,8 +215,12 @@ if (status === "Accepted") {
               <ActivityIndicator />
             ) : location ? (
               <>
-                <Text style={ui.loc}>Latitude: {location.latitude.toFixed(4)}</Text>
-                <Text style={ui.loc}>Longitude: {location.longitude.toFixed(4)}</Text>
+                <Text style={ui.loc}>
+                  Latitude: {location.latitude.toFixed(4)}
+                </Text>
+                <Text style={ui.loc}>
+                  Longitude: {location.longitude.toFixed(4)}
+                </Text>
                 <Text style={ui.loc}>📍 {location.address}</Text>
               </>
             ) : (
@@ -212,14 +229,20 @@ if (status === "Accepted") {
           </View>
         )}
 
-        {/* ACTIONS → inside scroll as requested */}
+        {/* ACTION BUTTONS */}
         {!isDone && (
           <>
-            <TouchableOpacity style={ui.rejectBtn} onPress={() => submit("Rejected")}>
+            <TouchableOpacity
+              style={ui.rejectBtn}
+              onPress={() => submit("Rejected")}
+            >
               <Text style={ui.rejectText}>Reject</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={ui.submitBtn} onPress={() => submit("Accepted")}>
+            <TouchableOpacity
+              style={ui.submitBtn}
+              onPress={() => submit("Completed")}
+            >
               <Text style={ui.submitText}>Submit</Text>
             </TouchableOpacity>
           </>
@@ -245,13 +268,12 @@ if (status === "Accepted") {
   );
 };
 
-export default TaskDetailPage_D;
+export default TaskDetailPage;
 
-/* 📌 Industrial UI Styles Only */
+/* Styles stay same as your original industrial UI */
 const ui = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#ECEFF4" },
   scroll: { padding: 16, paddingBottom: 80 },
-
   header: {
     backgroundColor: ColorConstants.primaryAccent,
     height: 110,
@@ -263,7 +285,6 @@ const ui = StyleSheet.create({
     paddingHorizontal: 16,
   },
   headerText: { color: "#fff", fontSize: 22, fontWeight: "700" },
-
   card: {
     backgroundColor: "#fff",
     padding: 16,
@@ -271,7 +292,6 @@ const ui = StyleSheet.create({
     elevation: 5,
     marginBottom: 18,
   },
-
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -279,14 +299,12 @@ const ui = StyleSheet.create({
   },
   label: { fontSize: 14, opacity: 0.7 },
   value: { fontSize: 15, fontWeight: "700" },
-
   sectionTitle: {
     fontSize: 17,
     fontWeight: "700",
     marginBottom: 10,
     color: "#111",
   },
-
   captureBtn: {
     borderWidth: 1.5,
     borderColor: ColorConstants.primaryAccent,
@@ -297,7 +315,6 @@ const ui = StyleSheet.create({
     marginBottom: 12,
   },
   captureText: { color: ColorConstants.primaryAccent, marginTop: 6 },
-
   thumb: {
     width: 100,
     height: 100,
@@ -305,7 +322,6 @@ const ui = StyleSheet.create({
     marginRight: 12,
     backgroundColor: "#ccc",
   },
-
   input: {
     backgroundColor: "#F4F6FA",
     borderRadius: 10,
@@ -313,10 +329,8 @@ const ui = StyleSheet.create({
     minHeight: 90,
     fontSize: 14,
   },
-
   loc: { fontSize: 14, marginBottom: 4 },
   err: { color: ColorConstants.danger, fontWeight: "700" },
-
   rejectBtn: {
     padding: 14,
     borderRadius: 14,
@@ -330,14 +344,17 @@ const ui = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
-
   submitBtn: {
     backgroundColor: ColorConstants.primaryAccent,
     padding: 14,
     borderRadius: 14,
   },
-  submitText: { color: "#fff", textAlign: "center", fontWeight: "700", fontSize: 16 },
-
+  submitText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "700",
+    fontSize: 16,
+  },
   fullscreen: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.98)",

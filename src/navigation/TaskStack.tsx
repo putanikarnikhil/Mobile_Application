@@ -3,8 +3,9 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import TasksPage from "../components/tasks/TasksPage";
 import TaskDetailPage from "../components/tasks/TaskDetailPage";
-import { Task, AppState, User } from "../App";
+import { Task, AppState, User, LocationData } from "../App";
 import { TaskStackParamList } from "./types";
+import { updateTaskStatus } from "../services/update-task-status"; 
 
 const Stack = createStackNavigator<TaskStackParamList>();
 
@@ -24,6 +25,26 @@ interface TaskStackProps {
 }
 
 const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
+  // FINAL Backend Update Handler
+  const onTaskUpdate = async (
+    id: string,
+    status: Task["status"],
+    images: string[],
+    comment: string,
+    location?: LocationData
+  ) => {
+    try {
+      await updateTaskStatus(id, {
+        status,
+        pictures: images,
+        remarks: comment,
+        address: location,
+      });
+    } catch (err) {
+      console.error("Failed to update task:", err);
+    }
+  };
+
   return (
     <Stack.Navigator
       initialRouteName="TasksList"
@@ -33,9 +54,13 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
     >
       <Stack.Screen name="TasksList">
         {() => (
-          <TasksPage {...props} setActiveSection={props.setActiveSection} />
+          <TasksPage
+            {...props}
+            setActiveSection={props.setActiveSection}
+          />
         )}
       </Stack.Screen>
+
       <Stack.Screen name="TaskDetail">
         {({ route, navigation }) => {
           const { task } = route.params;
@@ -43,7 +68,7 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
             <TaskDetailPage
               task={task}
               onGoBack={() => navigation.goBack()}
-              onTaskUpdate={props.appState.updateTaskStatus}
+              onTaskUpdate={onTaskUpdate} 
               images={props.appState.images}
               setImages={props.appState.setImages}
               comment={props.appState.comment}

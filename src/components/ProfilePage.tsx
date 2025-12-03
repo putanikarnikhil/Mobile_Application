@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  close: { position: "absolute", left: 20, top: 55 },
+  close: { position: "absolute", left: 20, top: 35 },
   headerTitle: { fontSize: 22, fontWeight: "700", color: "#fff" },
 
   avatarWrap: {

@@ -27,6 +27,7 @@ export interface SubmissionData {
 }
 
 export interface Task {
+  _id(_id: any, status: string, images: string[], comment: string, arg4: LocationData | undefined): unknown;
     address?: {
     latitude: number;
     longitude: number;

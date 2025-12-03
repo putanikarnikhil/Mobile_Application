@@ -1,5 +1,5 @@
 // components/tasks/TasksPage.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -15,15 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { styles, ColorConstants } from "../../AppStyles";
 import { Task } from "../../App";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { TaskStackParamList, RootStackParamList } from "../../navigation/types";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../../services/get-user-tasks";
 import { useUser } from "../../lib/auth-config";
 import TaskCard from "./TasksCard";
-import { mapApiItemToTask } from  "../../utils/transformations/task-transform"
-
+import { mapApiItemToTask } from "../../utils/transformations/task-transform";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -39,7 +38,7 @@ interface TasksPageProps {
   setActiveSection: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const TABS = ["Pending", "Completed", "Accepted","Rejected"];
+const TABS = ["Pending", "Completed", "Accepted", "Rejected"];
 
 const TasksPage: React.FC<TasksPageProps> = ({
   appState,
@@ -50,6 +49,8 @@ const TasksPage: React.FC<TasksPageProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<TasksPageNavigationProp>();
+  const route = useRoute<any>(); // 👈 to read autoSelectTab
+
   const { data: userData } = useUser();
   const userId = userData?.user?._id;
   const token = userData?.token;
@@ -66,29 +67,27 @@ const TasksPage: React.FC<TasksPageProps> = ({
     enabled: !!token,
   });
 
-// Debug: raw backend response
-console.log("RAW BACKEND DATA:", data);
+  // Auto-switch tab when coming back from TaskDetail
+  useEffect(() => {
+    const autoTab = route.params?.autoSelectTab;
+    if (autoTab) {
+      setActiveSection(autoTab);
+      setSearchQuery("");
+      refetch();
+    }
+  }, [route.params?.autoSelectTab]);
 
-// FIX: Backend returns array, not data.data
-const rawTasks = data?.data ?? [];
+  const rawTasks = data?.data ?? [];
 
+  const mappedTasks: Task[] = rawTasks.map((item: any) =>
+    mapApiItemToTask(item)
+  );
 
-// Convert backend -> Task model
-const mappedTasks: Task[] = rawTasks.map((item: any) =>
-  mapApiItemToTask(item)
-);
-
-// Debug mapped result (temporary)
-console.log("MAPPED TASKS:", mappedTasks);
-
-// Apply search filter
-const updatedTasks: Task[] = mappedTasks.filter((t) =>
-  [t.orderId, t.taskId, t.factory].some((v) =>
-    v?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-  )
-);
-
-
+  const updatedTasks: Task[] = mappedTasks.filter((t) =>
+    [t.orderId, t.taskId, t.factory].some((v) =>
+      v?.toString().toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  );
 
   const handleSelectTask = (task: Task) => {
     navigation.navigate("TaskDetail", { task });
@@ -105,10 +104,13 @@ const updatedTasks: Task[] = mappedTasks.filter((t) =>
     <View style={[{ paddingTop: insets.top, flex: 1 }, styles.safeArea]}>
       <StatusBar barStyle="dark-content" />
 
-      {/* PAGE HEADER */}
+      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Tasks</Text>
-        <TouchableOpacity onPress={handleProfilePress} style={styles.profileIconContainer}>
+        <TouchableOpacity
+          onPress={handleProfilePress}
+          style={styles.profileIconContainer}
+        >
           {profileImage ? (
             <Image source={{ uri: profileImage }} style={styles.profileIconImage} />
           ) : (
@@ -119,7 +121,7 @@ const updatedTasks: Task[] = mappedTasks.filter((t) =>
         </TouchableOpacity>
       </View>
 
-      {/* FIXED TABS SCROLL */}
+      {/* TABS */}
       <View style={{ height: 55, justifyContent: "center" }}>
         <ScrollView
           horizontal
@@ -170,9 +172,14 @@ const updatedTasks: Task[] = mappedTasks.filter((t) =>
           <RefreshControl refreshing={isFetching} onRefresh={refetch} />
         }
       >
-        {/* SEARCH BAR */}
+        {/* SEARCH */}
         <View style={[styles.searchContainer, { marginTop: 5 }]}>
-          <Ionicons name="search" size={20} color={ColorConstants.faintText} style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color={ColorConstants.faintText}
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search Order ID / Task ID / Factory"
@@ -186,7 +193,11 @@ const updatedTasks: Task[] = mappedTasks.filter((t) =>
         <View style={styles.content}>
           {updatedTasks.length > 0 ? (
             updatedTasks.map((task) => (
-              <TaskCard key={task.taskId} task={task} onSelectTask={handleSelectTask} />
+              <TaskCard
+                key={task.taskId}
+                task={task}
+                onSelectTask={handleSelectTask}
+              />
             ))
           ) : (
             <Text style={styles.noTasksText}>No tasks found.</Text>
