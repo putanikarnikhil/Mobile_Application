@@ -202,8 +202,8 @@ if (status === "Accepted") {
               <ActivityIndicator />
             ) : location ? (
               <>
-                <Text style={ui.loc}>Lat: {location.latitude.toFixed(4)}</Text>
-                <Text style={ui.loc}>Lng: {location.longitude.toFixed(4)}</Text>
+                <Text style={ui.loc}>Latitude: {location.latitude.toFixed(4)}</Text>
+                <Text style={ui.loc}>Longitude: {location.longitude.toFixed(4)}</Text>
                 <Text style={ui.loc}>📍 {location.address}</Text>
               </>
             ) : (
@@ -254,7 +254,7 @@ const ui = StyleSheet.create({
 
   header: {
     backgroundColor: ColorConstants.primaryAccent,
-    height: 130,
+    height: 110,
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
     flexDirection: "row",
@@ -344,5 +344,5 @@ const ui = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  close: { position: "absolute", top: 40, right: 20 },
+  close: { position: "absolute", top: 20, right: 20 },
 });

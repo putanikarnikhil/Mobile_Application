@@ -110,37 +110,11 @@ export default function ProfilePage({
         {/* Card - Profile Info */}
         <View style={styles.card}>
           {/* Editable Name */}
-          {editing ? (
-            <View style={styles.editRow}>
-              <TextInput
-                style={styles.nameInput}
-                value={name}
-                onChangeText={setName}
-                autoFocus
-                onBlur={() => {
-                  user.name = name;
-                  setEditing(false);
-                }}
-              />
-              <Ionicons
-                name="checkmark-circle"
-                size={22}
-                color={ColorConstants.primaryAccent}
-                onPress={() => {
-                  user.name = name;
-                  setEditing(false);
-                }}
-              />
-            </View>
-          ) : (
-            <View style={styles.row}>
-              <Ionicons name="person-outline" size={22} color="#6A7280" />
-              <Text style={styles.name}>{user.name}</Text>
-              <TouchableOpacity onPress={() => setEditing(true)}>
-                <Ionicons name="create-outline" size={20} color="#6A7280" />
-              </TouchableOpacity>
-            </View>
-          )}
+<View style={styles.row}>
+  <Ionicons name="person-outline" size={22} color="#6A7280" />
+  <Text style={styles.name}>{user.name}</Text>
+</View>
+
 
           {/* Email */}
           <View style={styles.row}>
@@ -189,14 +163,14 @@ export default function ProfilePage({
 /* -------------------------------- Styles ------------------------------- */
 const styles = StyleSheet.create({
   header: {
-    height: 180,
+    height: 170,
     backgroundColor: ColorConstants.primaryAccent,
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
     justifyContent: "center",
     alignItems: "center",
   },
-  close: { position: "absolute", left: 20, top: 15 },
+  close: { position: "absolute", left: 20, top: 55 },
   headerTitle: { fontSize: 22, fontWeight: "700", color: "#fff" },
 
   avatarWrap: {
