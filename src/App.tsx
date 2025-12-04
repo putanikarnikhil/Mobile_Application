@@ -7,6 +7,8 @@ import { queryConfig } from "./lib/react-query-config";
 import AppNavigator from "./navigation/AppNavigator";
 import { AuthLoader } from "./lib/auth-config";
 import { AuthProvider } from "./stores/auth-context";
+import { uploadPhoto } from "./services/upload-photo";
+
 
 export interface User {
   name: string;
@@ -54,6 +56,8 @@ export interface Task {
   isRejected: boolean;
   photos: string[];
   comments: string;
+
+  
 
   // CRITICAL FIX: Add the optional submissionData property
   submissionData?: SubmissionData;
@@ -113,50 +117,47 @@ const App: React.FC = () => {
   const [tempComment, setTempComment] = useState<string>("");
 
   // CRITICAL FUNCTION: Persists submission data into the main tasks array
-  const updateTaskStatus = (
-    taskId: string,
-    newStatus: Task["status"],
-    newImages: string[],
-    newComment: string,
-    locationData?: LocationData
-  ) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => {
-        if (task.id === taskId) {
-          // Determine boolean flags based on the new status
-          const isSubmitted = newStatus === "Accepted";
-          const isRejected = newStatus === "Rejected";
-          const isCompleted = newStatus === "Completed";
+const updateTaskStatus = async (
+  taskId: string,
+  newStatus: Task["status"],
+  newImages: string[],
+  newComment: string,
+  locationData?: LocationData
+) => {
 
-          const submission: SubmissionData | undefined = locationData
-            ? {
-                auditComment: newComment,
-                submittedOn: new Date().toISOString(),
-                location: locationData,
-              }
-            : task.submissionData; 
+  const uploadedUrls: string[] = [];
 
-          return {
+  for (const fileUri of newImages) {
+    const uploadedUrl = await uploadPhoto(fileUri);
+    uploadedUrls.push(uploadedUrl);
+  }
+
+  setTasks(prev =>
+    prev.map(task =>
+      task.id === taskId
+        ? {
             ...task,
             status: newStatus,
-            isSubmitted: isSubmitted,
-            isRejected: isRejected,
-            isCompleted: isCompleted,
-
-            // CRITICAL: SAVE THE SUBMISSION DATA TO THE PERMANENT TASK OBJECT
-            photos: newImages,
+            isSubmitted: newStatus === "Accepted",
+            isRejected: newStatus === "Rejected",
+            isCompleted: newStatus === "Completed",
+            photos: uploadedUrls,
             comments: newComment,
-            submissionData: submission,
-          };
-        }
-        return task;
-      })
-    );
+            submissionData: locationData
+              ? {
+                  auditComment: newComment,
+                  submittedOn: new Date().toISOString(),
+                  location: locationData,
+                }
+              : task.submissionData,
+          }
+        : task
+    )
+  );
 
-    // Clear temporary state after submission/rejection
-    setTempImages([]);
-    setTempComment("");
-  };
+  setTempImages([]);
+  setTempComment("");
+};
 
   // Combine state and setters into a single AppState object for easy prop drilling
   const appState: AppState & {

@@ -49,8 +49,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<TasksPageNavigationProp>();
-  const route = useRoute<any>(); // 👈 to read autoSelectTab
-
+  const route = useRoute<any>();  
   const { data: userData } = useUser();
   const userId = userData?.user?._id;
   const token = userData?.token;

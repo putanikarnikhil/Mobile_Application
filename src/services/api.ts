@@ -12,9 +12,7 @@ export const debugAsyncStorage = async () => {
     const stores = await AsyncStorage.multiGet(keys);
 
     log.debug("📦 ASYNC STORAGE DUMP START");
-    if (stores.length === 0) {
-      log.debug("🫙 Storage is empty");
-    }
+    if (stores.length === 0) log.debug("🫙 Storage is empty");
 
     stores.forEach(([key, value]) => {
       try {
@@ -35,7 +33,7 @@ export const debugAsyncStorage = async () => {
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-  headers: { "Content-Type": "application/json" },
+  headers: {},  
 });
 
 /* Request Interceptor - Attach Token */
@@ -46,8 +44,6 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       log.debug("🔑 Token attached to request");
-    } else {
-      log.debug("⚠ No token found for request");
     }
 
     return config;
@@ -68,14 +64,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       log.warn("⚠ 401 Unauthorized - Clearing auth data");
 
-      // ✅ Clear all auth data on 401
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("userData");
 
       debugAsyncStorage();
-
-      // ✅ You can also trigger a navigation to login here if needed
-      // Example: navigationRef.current?.navigate('Login');
     }
 
     log.error("❌ API Error:", error.response?.data || error.message);

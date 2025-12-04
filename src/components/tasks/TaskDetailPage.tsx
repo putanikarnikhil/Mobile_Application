@@ -35,7 +35,7 @@ type Props = {
     imgs: string[],
     comment: string,
     location?: LocationData
-  ) => void; // 👈 VOID, NOT Promise
+  ) => void;
   onGoBack: () => void;
 } & TaskStackScreenProps<"TaskDetail">;
 
@@ -54,8 +54,12 @@ const TaskDetailPage: React.FC<Props> = ({
   const [loadingLoc, setLoadingLoc] = useState(true);
   const [full, setFull] = useState(false);
   const [index, setIndex] = useState(0);
+  console.log("asd", task);
 
-  const isDone = task.status === "Accepted" || task.status === "Completed" || task.status === "Rejected";
+  const isDone =
+    task.status === "Accepted" ||
+    task.status === "Completed" ||
+    task.status === "Rejected";
 
   useEffect(() => {
     (async () => {
@@ -74,8 +78,8 @@ const TaskDetailPage: React.FC<Props> = ({
   }, []);
 
   const statusColor: Record<Task["status"], string> = {
-    Pending: ColorConstants.primaryAccent,
-    Accepted: ColorConstants.warning,
+    Pending: ColorConstants.warning,
+    Accepted: ColorConstants.primaryAccent,
     Rejected: ColorConstants.danger,
     Completed: ColorConstants.success,
     Overdue: ColorConstants.danger,
@@ -87,24 +91,20 @@ const TaskDetailPage: React.FC<Props> = ({
         "Location Required",
         "Enable location for audit verification"
       );
-
     const res = await ImagePicker.launchCameraAsync({ quality: 0.7 });
     if (!res.canceled) setImages([...images, res.assets[0].uri]);
   };
+  console.log("IMG", images);
 
-  const submit = (status: Task["status"]) => {
-    // 1️⃣ Validation: Completed must have at least 1 photo
-    if (status === "Completed" && images.length === 0) {
+  const submit = (newStatus: Task["status"]) => {
+    if (newStatus === "Completed" && images.length === 0) {
       return Alert.alert("Missing Photo", "Upload at least 1 inspection photo");
     }
 
-    // 2️⃣ Update task (parent handles backend / state)
-    onTaskUpdate(task.id, status, images, comment, location ?? undefined);
+    onTaskUpdate(task.id, newStatus, images, comment, location ?? undefined);
 
-    // 3️⃣ Navigate to correct tab
-    const parentNav = navigation.getParent(); // RootStack
-
-    const autoSelectTab = status === "Completed" ? "Completed" : "Rejected";
+    const parentNav = navigation.getParent();
+    const autoSelectTab = newStatus === "Completed" ? "Completed" : "Rejected";
 
     parentNav?.navigate("MainTabs", {
       screen: "HomeTab",
@@ -118,21 +118,22 @@ const TaskDetailPage: React.FC<Props> = ({
   const renderDetailItem = (
     label: string,
     value: string | number,
-    isStatus?: boolean
+    badge?: boolean
   ) => (
     <View style={ui.detailRow}>
       <Text style={ui.label}>{label}</Text>
       <Text
         style={[
           ui.value,
-          isStatus && {
+          badge && {
             backgroundColor: statusColor[value as Task["status"]],
             color: "#fff",
             paddingHorizontal: 10,
             paddingVertical: 4,
-            borderRadius: 14,
+            borderRadius: 10,
           },
         ]}
+        numberOfLines={1}
       >
         {value}
       </Text>
@@ -141,7 +142,7 @@ const TaskDetailPage: React.FC<Props> = ({
 
   return (
     <View style={ui.container}>
-      {/* Header */}
+      {/* HEADER */}
       <View style={[ui.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={onGoBack}>
           <Ionicons name="arrow-back" size={26} color="#fff" />
@@ -151,20 +152,29 @@ const TaskDetailPage: React.FC<Props> = ({
       </View>
 
       <ScrollView contentContainerStyle={ui.scroll}>
-        {/* Task Detail Section */}
+        {/* 🔹 Main Task Fields */}
         <View style={ui.card}>
-          {renderDetailItem("Order ID:", task.orderId)}
-          {renderDetailItem("Order Stage ID:", task.orderStageId)}
-          {renderDetailItem("Task ID:", task.taskId)}
-          {renderDetailItem("Factory Name:", task.factory)}
-          {renderDetailItem("Product Name:", task.product)}
-          {renderDetailItem("Stage Name:", task.stage)}
-          {renderDetailItem("Stage Status:", task.stageStatus, true)}
-          {renderDetailItem("Task Type:", task.taskType)}
-          {renderDetailItem("Task Status:", task.status, true)}
+          {renderDetailItem("Order ID", task.orderId)}
+          {renderDetailItem("Stage", task.stage)}
+          {renderDetailItem("Factory", task.factory)}
+          {renderDetailItem("Type", task.taskType)}
+          {renderDetailItem("Status", task.status, true)}
         </View>
 
-        {/* Photos */}
+        {/* 🔍 Debug JSON View */}
+        <View style={ui.card}>
+          <Text style={ui.sectionTitle}>All Task Data (Debug)</Text>
+          {Object.entries(task).map(([key, val]) => (
+            <View key={key} style={ui.detailRow}>
+              <Text style={ui.label}>{key}:</Text>
+              <Text style={[ui.value, { flex: 1 }]}>
+                {typeof val === "object" ? JSON.stringify(val) : String(val)}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/*   Photos */}
         <View style={ui.card}>
           <Text style={ui.sectionTitle}>Inspection Photos</Text>
 
@@ -172,19 +182,35 @@ const TaskDetailPage: React.FC<Props> = ({
             <TouchableOpacity style={ui.captureBtn} onPress={handlePhoto}>
               <Ionicons
                 name="camera-outline"
-                size={30}
+                size={32}
                 color={ColorConstants.primaryAccent}
               />
               <Text style={ui.captureText}>Take Photo</Text>
             </TouchableOpacity>
           )}
 
-          <ScrollView horizontal>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {/* Display existing photos from task data */}
+            {task.photos &&
+              task.photos.length > 0 &&
+              task.photos.map((uri, i) => (
+                <TouchableOpacity
+                  key={`task-${i}`}
+                  onPress={() => {
+                    setIndex(i);
+                    setFull(true);
+                  }}
+                >
+                  <Image source={{ uri }} style={ui.thumb} />
+                </TouchableOpacity>
+              ))}
+
+            {/* Display newly captured photos */}
             {images.map((uri, i) => (
               <TouchableOpacity
-                key={i}
+                key={`new-${i}`}
                 onPress={() => {
-                  setIndex(i);
+                  setIndex((task.photos?.length || 0) + i);
                   setFull(true);
                 }}
               >
@@ -192,9 +218,21 @@ const TaskDetailPage: React.FC<Props> = ({
               </TouchableOpacity>
             ))}
           </ScrollView>
+
+          {!task.photos?.length && images.length === 0 && (
+            <Text
+              style={{
+                color: ColorConstants.mediumText,
+                textAlign: "center",
+                marginTop: 10,
+              }}
+            >
+              No photos available
+            </Text>
+          )}
         </View>
 
-        {/* Comments */}
+        {/* Comment */}
         <View style={ui.card}>
           <Text style={ui.sectionTitle}>Auditor Notes</Text>
           <TextInput
@@ -207,7 +245,7 @@ const TaskDetailPage: React.FC<Props> = ({
           />
         </View>
 
-        {/* Location */}
+        {/* 📍 Location */}
         {!isDone && (
           <View style={ui.card}>
             <Text style={ui.sectionTitle}>Location Verification</Text>
@@ -215,21 +253,17 @@ const TaskDetailPage: React.FC<Props> = ({
               <ActivityIndicator />
             ) : location ? (
               <>
-                <Text style={ui.loc}>
-                  Latitude: {location.latitude.toFixed(4)}
-                </Text>
-                <Text style={ui.loc}>
-                  Longitude: {location.longitude.toFixed(4)}
-                </Text>
+                <Text style={ui.loc}>Lat: {location.latitude.toFixed(4)}</Text>
+                <Text style={ui.loc}>Lng: {location.longitude.toFixed(4)}</Text>
                 <Text style={ui.loc}>📍 {location.address}</Text>
               </>
             ) : (
-              <Text style={ui.err}>Location Required!</Text>
+              <Text style={ui.err}>Location Required</Text>
             )}
           </View>
         )}
 
-        {/* ACTION BUTTONS */}
+        {/* ACTIONS */}
         {!isDone && (
           <>
             <TouchableOpacity
@@ -249,12 +283,14 @@ const TaskDetailPage: React.FC<Props> = ({
         )}
       </ScrollView>
 
-      {/* FULLSCREEN IMAGE VIEW */}
+      {/* FULLSCREEN IMAGE MODAL */}
       {full && (
-        <Modal animationType="fade" transparent>
+        <Modal transparent animationType="fade">
           <View style={ui.fullscreen}>
             <Image
-              source={{ uri: images[index] }}
+              source={{
+                uri: [...(task.photos || []), ...images][index],
+              }}
               style={{ width, height: height * 0.6 }}
               resizeMode="contain"
             />
@@ -270,96 +306,130 @@ const TaskDetailPage: React.FC<Props> = ({
 
 export default TaskDetailPage;
 
-/* Styles stay same as your original industrial UI */
+/* Updated Modern UI */
 const ui = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ECEFF4" },
-  scroll: { padding: 16, paddingBottom: 80 },
+  container: { flex: 1, backgroundColor: ColorConstants.background },
+  scroll: { paddingHorizontal: 15, paddingBottom: 120 },
+
   header: {
     backgroundColor: ColorConstants.primaryAccent,
-    height: 110,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    paddingBottom: 18,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    alignItems: "center",
+    paddingHorizontal: 18,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    elevation: 8,
+    height: 127,
+    marginBottom: 23,
   },
-  headerText: { color: "#fff", fontSize: 22, fontWeight: "700" },
+  headerText: { color: "#fff", fontSize: 22, fontWeight: "800" },
+
   card: {
-    backgroundColor: "#fff",
-    padding: 16,
+    backgroundColor: ColorConstants.surface,
     borderRadius: 18,
-    elevation: 5,
+    padding: 18,
     marginBottom: 18,
+    shadowColor: ColorConstants.shadow,
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: ColorConstants.inputBorder,
   },
+
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 5,
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: ColorConstants.inputBase,
   },
-  label: { fontSize: 14, opacity: 0.7 },
-  value: { fontSize: 15, fontWeight: "700" },
-  sectionTitle: {
-    fontSize: 17,
+  label: {
+    fontSize: 14,
+    color: ColorConstants.mediumText,
+    fontWeight: "500",
+    flex: 1,
+  },
+  value: {
+    fontSize: 15,
+    color: ColorConstants.darkText,
     fontWeight: "700",
-    marginBottom: 10,
-    color: "#111",
+    maxWidth: "60%",
+    textAlign: "right",
   },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 14,
+    color: ColorConstants.darkText,
+  },
+
   captureBtn: {
-    borderWidth: 1.5,
+    height: 110,
+    borderRadius: 15,
+    borderWidth: 2,
     borderColor: ColorConstants.primaryAccent,
     borderStyle: "dashed",
-    borderRadius: 10,
-    padding: 14,
+    justifyContent: "center",
     alignItems: "center",
     marginBottom: 12,
   },
-  captureText: { color: ColorConstants.primaryAccent, marginTop: 6 },
+  captureText: { fontWeight: "600", color: ColorConstants.primaryAccent },
+
   thumb: {
-    width: 100,
-    height: 100,
-    borderRadius: 14,
-    marginRight: 12,
-    backgroundColor: "#ccc",
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: ColorConstants.inputBorder,
   },
+
   input: {
-    backgroundColor: "#F4F6FA",
-    borderRadius: 10,
-    padding: 10,
-    minHeight: 90,
-    fontSize: 14,
-  },
-  loc: { fontSize: 14, marginBottom: 4 },
-  err: { color: ColorConstants.danger, fontWeight: "700" },
-  rejectBtn: {
+    backgroundColor: ColorConstants.inputBase,
+    borderRadius: 12,
     padding: 14,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: ColorConstants.inputBorder,
+    minHeight: 100,
+    color: ColorConstants.darkText,
+  },
+
+  loc: { fontSize: 14, fontWeight: "600", marginBottom: 3 },
+  err: { color: ColorConstants.danger, fontWeight: "800" },
+
+  rejectBtn: {
+    paddingVertical: 15,
     borderRadius: 14,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: ColorConstants.danger,
     marginBottom: 12,
   },
   rejectText: {
     color: ColorConstants.danger,
     textAlign: "center",
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 16,
   },
+
   submitBtn: {
     backgroundColor: ColorConstants.primaryAccent,
-    padding: 14,
+    paddingVertical: 15,
     borderRadius: 14,
+    elevation: 6,
   },
-  submitText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "700",
-    fontSize: 16,
-  },
+  submitText: { color: "#fff", fontWeight: "800", textAlign: "center" },
+
   fullscreen: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.98)",
+    backgroundColor: "rgba(0,0,0,0.95)",
     justifyContent: "center",
     alignItems: "center",
   },
-  close: { position: "absolute", top: 20, right: 20 },
+  close: { position: "absolute", top: 30, right: 20 },
 });

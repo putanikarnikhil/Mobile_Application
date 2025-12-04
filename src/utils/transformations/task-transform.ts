@@ -2,45 +2,55 @@
 import { Task, SubmissionData } from "../../App";
 
 export function mapApiItemToTask(item: any): Task {
-  return {
-    id: item._id ?? "",
-    orderId:
-      item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.modelId ??
-      "N/A",
-    orderStageId: item.orderStageTrackingObjId?._id ?? "",
-    taskId: item.orderTaskId ?? "",
-    factory: item.orderStageTrackingObjId?.factoryOrgId?.name ?? "N/A",
-    product:
-      (
-        `${item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.productType ?? ""} ` +
-        `${item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.productClass ?? ""} ` +
-        `${item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.productSubclass ?? ""}`
-      ).trim() || "N/A",
+return {
+  _id: item._id ?? "",
+  id: item._id ?? "",
 
-    stage: item.orderStageTrackingObjId?.stageName ?? "",
-    stageStatus: item.orderStageTrackingObjId?.stageStatus ?? "pending",
+  orderId:
+    item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.modelId ??
+    "N/A",
+  orderStageId: item.orderStageTrackingObjId?._id ?? "",
+  taskId: item.orderTaskId ?? "",
+  factory: item.orderStageTrackingObjId?.factoryOrgId?.name ?? "N/A",
 
-    taskType: item.taskType || "",
-    status: item.status || "Pending",
-    priority: item.priority || "",
+  product:
+    (
+      `${item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.productType ?? ""} ` +
+      `${item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.productClass ?? ""} ` +
+      `${item.orderStageTrackingObjId?.orderVariantObjId?.orderObjId?.productSubclass ?? ""}`
+    ).trim() || "N/A",
 
-    dueDate: item.dueDate,
-    completedOn: item.completedOn ?? null,
+  stage: item.orderStageTrackingObjId?.stageName ?? "",
+  stageStatus: item.orderStageTrackingObjId?.stageStatus ?? "pending",
 
-    address: item.address ?? null,
-    remarks: item.remarks ?? null,
-    rejectionReason: item.rejectionReason ?? null,
+  taskType: item.taskType ?? "",
+  status: item.status ?? "Pending",
+  priority: item.priority ?? "",
 
-    photos: item.pictures?.map((p: any) => p.url) ?? [],
-    comments: item.remarks ?? "",
+  dueDate: item.dueDate ?? null,
+  completedOn: item.completedOn ?? null,
 
-    isOverdue: !!item.dueDate && new Date(item.dueDate) < new Date(),
-    isSubmitted: item.status === "Accepted",
-    isCompleted: item.status === "Completed",
-    isRejected: item.status === "Rejected",
-  };
-}
+  address: item.address ?? null,
+  remarks: item.remarks ?? null,
+  rejectionReason: item.rejectionReason ?? null,
 
+  photos: item.pictures?.map((p: any) => p.url) ?? [],
+  comments: item.remarks ?? "",
+
+  isOverdue: !!item.dueDate && new Date(item.dueDate) < new Date(),
+  isSubmitted: item.status === "Accepted",
+  isCompleted: item.status === "Completed",
+  isRejected: item.status === "Rejected",
+
+  // 🆕 REQUIRED NEW FIELD
+  submissionData: item.submissionData ?? {
+    images: [],
+    comment: "",
+    location: null,
+  },
+};
+
+};
 
 export const mapApiResponseToTasks = (apiData: any[]): Task[] =>
   apiData.map(mapApiItemToTask);
