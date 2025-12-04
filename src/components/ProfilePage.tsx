@@ -51,9 +51,8 @@ export default function ProfilePage({
   const initial = user.name.charAt(0).toUpperCase();
 
   // Animations
-  const scaleAnim = React.useRef(new Animated.Value(0)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const slideAnim = React.useRef(new Animated.Value(50)).current;
+  const slideAnim = React.useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     ImagePicker.requestCameraPermissionsAsync();
@@ -61,12 +60,6 @@ export default function ProfilePage({
 
     // Entry animations
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 600,
@@ -230,74 +223,69 @@ export default function ProfilePage({
         translucent
       />
 
-      {/* Premium Gradient Header */}
-      <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
-        <LinearGradient
-          colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
-          {/* Decorative circles */}
-          <View style={styles.headerCircle1} />
-          <View style={styles.headerCircle2} />
-
-          {/* Back button */}
-          <TouchableOpacity onPress={onGoBack} style={styles.backButton}>
-            <View style={styles.backButtonInner}>
-              <Ionicons name="arrow-back" size={24} color="#3B82F6" />
-            </View>
-          </TouchableOpacity>
-
-          {/* Header content */}
-          <Animated.View style={[styles.headerContent, { opacity: fadeAnim }]}>
-            <Text style={styles.headerTitle}>My Profile</Text>
-            <Text style={styles.headerSubtitle}>Manage your account</Text>
-          </Animated.View>
-        </LinearGradient>
+      {/* Fixed Back Button */}
+      <View style={[styles.fixedBackButton, { top: insets.top + 10 }]}>
+        <TouchableOpacity onPress={onGoBack}>
+          <View style={styles.backButtonInner}>
+            <Ionicons name="arrow-back" size={24} color="#3B82F6" />
+          </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Floating Avatar */}
-      <Animated.View
-        style={[
-          styles.avatarContainer,
-          {
-            transform: [{ scale: scaleAnim }],
-            opacity: fadeAnim,
-          },
-        ]}
-      >
-        <View style={styles.avatarShadow}>
-          <TouchableOpacity onPress={pickImage} activeOpacity={0.9}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarInitial}>{initial}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Edit button */}
-          <TouchableOpacity onPress={pickImage} style={styles.editButton}>
-            <LinearGradient
-              colors={["#3B82F6", "#2563EB"]}
-              style={styles.editButtonGradient}
-            >
-              <Ionicons name="camera" size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          {/* Verified badge */}
-        </View>
-      </Animated.View>
-
-      {/* Content */}
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top },
+        ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Scrollable Header */}
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <LinearGradient
+            colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            {/* Decorative circles */}
+            <View style={styles.headerCircle1} />
+            <View style={styles.headerCircle2} />
+
+            {/* Header content */}
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>My Profile</Text>
+              <Text style={styles.headerSubtitle}>Manage your account</Text>
+            </View>
+          </LinearGradient>
+
+          {/* Avatar - now part of scroll content */}
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarShadow}>
+              <TouchableOpacity onPress={pickImage} activeOpacity={0.9}>
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitial}>{initial}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Edit button */}
+              <TouchableOpacity onPress={pickImage} style={styles.editButton}>
+                <LinearGradient
+                  colors={["#3B82F6", "#2563EB"]}
+                  style={styles.editButtonGradient}
+                >
+                  <Ionicons name="camera" size={20} color="#fff" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Content */}
         <Animated.View
           style={[
             styles.contentWrapper,
@@ -379,12 +367,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
   },
-  headerWrapper: {
-    height: 220,
-    overflow: "hidden",
+  fixedBackButton: {
+    position: "absolute",
+    left: 20,
+    zIndex: 1000,
+  },
+  backButtonInner: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   headerGradient: {
-    flex: 1,
+    height: 200,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     overflow: "hidden",
@@ -408,30 +416,11 @@ const styles = StyleSheet.create({
     bottom: -50,
     left: -60,
   },
-  backButton: {
-    position: "absolute",
-    top: 60,
-    left: 20,
-    zIndex: 10,
-  },
-  backButtonInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
   headerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 0,
+    paddingTop: 20,
   },
   headerTitle: {
     fontSize: 32,
@@ -446,10 +435,9 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   avatarContainer: {
-    position: "absolute",
-    top: 170,
-    alignSelf: "center",
-    zIndex: 100,
+    alignItems: "center",
+    marginTop: -65,
+    marginBottom: 20,
   },
   avatarShadow: {
     shadowColor: "#000",
@@ -496,21 +484,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  verifiedBadge: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 2,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 80,
-    paddingBottom: 40,
-  },
   contentWrapper: {
     paddingHorizontal: 20,
   },
@@ -521,23 +494,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 8,
     letterSpacing: -0.5,
-  },
-  userBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#D1FAE5",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: "center",
-    marginBottom: 32,
-  },
-  userBadgeText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#059669",
   },
   section: {
     paddingTop: 34,
