@@ -15,12 +15,6 @@ export interface User {
   email: string;
 }
 
-export interface LocationData {
-  latitude: number;
-  longitude: number;
-  address: string;
-}
-
 // CRITICAL FIX: Define the SubmissionData type for TypeScript to recognize it
 export interface SubmissionData {
   auditComment: string;
@@ -29,6 +23,7 @@ export interface SubmissionData {
 }
 
 export interface Task {
+  stageName: React.JSX.Element;
   _id(_id: any, status: string, images: string[], comment: string, arg4: LocationData | undefined): unknown;
     address?: {
     latitude: number;
@@ -57,13 +52,28 @@ export interface Task {
   photos: string[];
   comments: string;
 
-  
-
-  // CRITICAL FIX: Add the optional submissionData property
   submissionData?: SubmissionData;
 
   
 }
+
+
+export type LocationData = {
+  latitude: number;
+  longitude: number;
+  address: string;
+  details?: {
+    name?: string;
+    street?: string;
+    district?: string;
+    city?: string;
+    subregion?: string;
+    region?: string;
+    postalCode?: string;
+    country?: string;
+  };
+};
+
 
 // Define the root application state structure
 export interface AppState {
@@ -86,9 +96,6 @@ export interface AppState {
     locationData?: LocationData
   ) => void;
 }
-
-const mockImageUri = "https://picsum.photos/id/102/100/100";
-const mockImageUri2 = "https://picsum.photos/id/103/100/100";
 
 const INITIAL_TASKS: Task[] = [
   

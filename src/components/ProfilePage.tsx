@@ -4,19 +4,25 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
-  TextInput,
   Alert,
   Image,
   ScrollView,
   ActivityIndicator,
   StyleSheet,
   Clipboard,
+  Platform,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLogout } from "../lib/auth-config";
 import { ColorConstants } from "../AppStyles";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
+
+const { width } = Dimensions.get("window");
 
 type ProfilePageProps = {
   user: {
@@ -40,24 +46,70 @@ export default function ProfilePage({
   navigation,
 }: ProfilePageProps) {
   const insets = useSafeAreaInsets();
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(user.name);
   const [loading, setLoading] = useState(false);
   const { mutateAsync: logout } = useLogout();
-
   const initial = user.name.charAt(0).toUpperCase();
 
+  // Animations
+  const scaleAnim = React.useRef(new Animated.Value(0)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    ImagePicker.requestCameraPermissionsAsync();
+    ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    // Entry animations
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const pickImage = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.9,
-    });
-    if (!res.canceled) setProfileImage(res.assets[0].uri);
+    Alert.alert("Upload Profile Photo", "Choose an option", [
+      {
+        text: "Take Photo",
+        onPress: async () => {
+          const cam = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.9,
+          });
+          if (!cam.canceled) setProfileImage(cam.assets[0]?.uri);
+        },
+      },
+      {
+        text: "Choose From Gallery",
+        onPress: async () => {
+          const gal = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.9,
+          });
+          if (!gal.canceled) setProfileImage(gal.assets[0]?.uri);
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Do you want to exit your session?", [
+    Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Logout",
@@ -74,163 +126,540 @@ export default function ProfilePage({
 
   const copyID = () => {
     Clipboard.setString(user._id);
-    Alert.alert("Copied", "User ID copied successfully!");
+    Alert.alert("Copied!", "User ID copied to clipboard");
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#F5F7FB" }}>
-      <StatusBar barStyle="light-content" />
+  const MenuItem = ({
+    icon,
+    title,
+    subtitle,
+    onPress,
+    iconColor = "#3B82F6",
+    iconBg = "#EEF2FF",
+    showArrow = true,
+    danger = false,
+  }: any) => {
+    const pressAnim = React.useRef(new Animated.Value(1)).current;
 
-      {/* Premium Gradient Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={onGoBack} style={styles.close}>
-          <Ionicons name="arrow-back" size={26} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
+    const handlePressIn = () => {
+      Animated.spring(pressAnim, {
+        toValue: 0.96,
+        useNativeDriver: true,
+      }).start();
+    };
 
-      {/* Avatar Floating */}
-      <View style={styles.avatarWrap}>
-        <TouchableOpacity onPress={pickImage}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitial}>{initial}</Text>
-            </View>
+    const handlePressOut = () => {
+      Animated.spring(pressAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <Animated.View style={{ transform: [{ scale: pressAnim }] }}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+          disabled={loading}
+        >
+          <View style={[styles.menuIconContainer, { backgroundColor: iconBg }]}>
+            <Ionicons name={icon} size={24} color={iconColor} />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuTitle, danger && { color: "#EF4444" }]}>
+              {title}
+            </Text>
+            {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+          </View>
+          {showArrow && (
+            <Ionicons name="chevron-forward" size={22} color="#CBD5E1" />
+          )}
+          {loading && danger && (
+            <ActivityIndicator color="#EF4444" size="small" />
           )}
         </TouchableOpacity>
-        <TouchableOpacity onPress={pickImage} style={styles.editAvatar}>
-          <Ionicons name="camera" size={16} color="#fff" />
+      </Animated.View>
+    );
+  };
+
+  const InfoCard = ({
+    icon,
+    label,
+    value,
+    onPress,
+    iconColor = "#3B82F6",
+  }: any) => (
+    <TouchableOpacity
+      style={styles.infoCard}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+      disabled={!onPress}
+    >
+      <View
+        style={[
+          styles.infoIconContainer,
+          { backgroundColor: iconColor + "15" },
+        ]}
+      >
+        <Ionicons name={icon} size={20} color={iconColor} />
+      </View>
+      <View style={styles.infoTextContainer}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      {onPress && (
+        <TouchableOpacity onPress={onPress} style={styles.copyButton}>
+          <Ionicons name="copy-outline" size={18} color="#3B82F6" />
         </TouchableOpacity>
+      )}
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
+
+      {/* Premium Gradient Header */}
+      <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
+        <LinearGradient
+          colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          {/* Decorative circles */}
+          <View style={styles.headerCircle1} />
+          <View style={styles.headerCircle2} />
+
+          {/* Back button */}
+          <TouchableOpacity onPress={onGoBack} style={styles.backButton}>
+            <View style={styles.backButtonInner}>
+              <Ionicons name="arrow-back" size={24} color="#3B82F6" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Header content */}
+          <Animated.View style={[styles.headerContent, { opacity: fadeAnim }]}>
+            <Text style={styles.headerTitle}>My Profile</Text>
+            <Text style={styles.headerSubtitle}>Manage your account</Text>
+          </Animated.View>
+        </LinearGradient>
       </View>
 
+      {/* Floating Avatar */}
+      <Animated.View
+        style={[
+          styles.avatarContainer,
+          {
+            transform: [{ scale: scaleAnim }],
+            opacity: fadeAnim,
+          },
+        ]}
+      >
+        <View style={styles.avatarShadow}>
+          <TouchableOpacity onPress={pickImage} activeOpacity={0.9}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarInitial}>{initial}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Edit button */}
+          <TouchableOpacity onPress={pickImage} style={styles.editButton}>
+            <LinearGradient
+              colors={["#3B82F6", "#2563EB"]}
+              style={styles.editButtonGradient}
+            >
+              <Ionicons name="camera" size={20} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Verified badge */}
+        </View>
+      </Animated.View>
+
       {/* Content */}
-      <ScrollView style={{ marginTop: 60 }} contentContainerStyle={{ paddingBottom: 30 }}>
-        {/* Card - Profile Info */}
-        <View style={styles.card}>
-          {/* Editable Name */}
-<View style={styles.row}>
-  <Ionicons name="person-outline" size={22} color="#6A7280" />
-  <Text style={styles.name}>{user.name}</Text>
-</View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View
+          style={[
+            styles.contentWrapper,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          {/* User name */}
+          <Text style={styles.userName}>{user.name}</Text>
 
-
-          {/* Email */}
-          <View style={styles.row}>
-            <Ionicons name="mail-outline" size={22} color="#6A7280" />
-            <Text style={styles.text}>{user.email}</Text>
+          {/* Info Cards */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ACCOUNT INFORMATION</Text>
+            <View style={styles.infoCardsContainer}>
+              <InfoCard
+                icon="mail"
+                label="Email Address"
+                value={user.email}
+                iconColor="#3B82F6"
+              />
+              <InfoCard
+                icon="finger-print"
+                label="User ID"
+                value={user._id}
+                onPress={copyID}
+                iconColor="#8B5CF6"
+              />
+            </View>
           </View>
 
-          {/* User ID */}
-          <View style={styles.row}>
-            <Ionicons name="shield-checkmark-outline" size={22} color="#6A7280" />
-            <Text style={[styles.text, { flex: 1 }]} numberOfLines={1}>
-              {user._id}
-            </Text>
-            <TouchableOpacity onPress={copyID}>
-              <Ionicons name="copy-outline" size={20} color={ColorConstants.primaryAccent} />
-            </TouchableOpacity>
+          {/* Menu Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>PREFERENCES</Text>
+            <View style={styles.menuContainer}>
+              <MenuItem
+                icon="notifications"
+                title="Notifications"
+                subtitle="Manage your notifications"
+                onPress={() => navigation.navigate("NotificationsModal")}
+                iconColor="#F59E0B"
+                iconBg="#FEF3C7"
+              />
+            </View>
           </View>
-        </View>
 
-        {/* Menu Card */}
-        <View style={styles.card}>
-          <TouchableOpacity
-            style={styles.menu}
-            onPress={() => navigation.navigate("NotificationsModal")}
-          >
-            <Ionicons name="notifications-outline" size={22} color={ColorConstants.primaryAccent} />
-            <Text style={styles.menuText}>Notifications</Text>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
+          {/* Account Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ACCOUNT</Text>
+            <View style={styles.menuContainer}>
+              <View style={styles.menuDivider} />
+              <MenuItem
+                icon="log-out"
+                title="Logout"
+                subtitle="Sign out of your account"
+                onPress={handleLogout}
+                iconColor="#EF4444"
+                iconBg="#FEE2E2"
+                showArrow={false}
+                danger
+              />
+            </View>
+          </View>
 
-          <View style={styles.sep} />
-
-          <TouchableOpacity style={styles.menu} onPress={handleLogout} disabled={loading}>
-            <Ionicons name="log-out-outline" size={22} color={ColorConstants.danger} />
-            <Text style={[styles.menuText, { color: ColorConstants.danger }]}>Logout</Text>
-            {loading && <ActivityIndicator color={ColorConstants.danger} size="small" />}
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.version}>App Version 2.1.0</Text>
+          {/* App Info */}
+          <View style={styles.appInfo}>
+            <Text style={styles.appVersion}>Version 1.1.0</Text>
+            <Text style={styles.appCopyright}>© 2025 VERDE</Text>
+          </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
 }
 
-/* -------------------------------- Styles ------------------------------- */
 const styles = StyleSheet.create({
-  header: {
-    height: 170,
-    backgroundColor: ColorConstants.primaryAccent,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
-    justifyContent: "center",
-    alignItems: "center",
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
   },
-  close: { position: "absolute", left: 20, top: 35 },
-  headerTitle: { fontSize: 22, fontWeight: "700", color: "#fff" },
-
-  avatarWrap: {
+  headerWrapper: {
+    height: 220,
+    overflow: "hidden",
+  },
+  headerGradient: {
+    flex: 1,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    overflow: "hidden",
+    position: "relative",
+  },
+  headerCircle1: {
     position: "absolute",
-    top: 120,
-    alignSelf: "center",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    top: -100,
+    right: -80,
+  },
+  headerCircle2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    bottom: -50,
+    left: -60,
+  },
+  backButton: {
+    position: "absolute",
+    top: 60,
+    left: 20,
     zIndex: 10,
   },
+  backButtonInner: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 0,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: "500",
+  },
+  avatarContainer: {
+    position: "absolute",
+    top: 170,
+    alignSelf: "center",
+    zIndex: 100,
+  },
+  avatarShadow: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 12,
+  },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 5,
     borderColor: "#fff",
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#E8EBF2",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 5,
+    borderColor: "#fff",
+  },
+  avatarInitial: {
+    fontSize: 52,
+    fontWeight: "800",
+    color: "#3B82F6",
+  },
+  editButton: {
+    position: "absolute",
+    bottom: 5,
+    right: 0,
+    borderRadius: 22,
+    overflow: "hidden",
+    borderWidth: 4,
+    borderColor: "#fff",
+  },
+  editButtonGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarInitial: { fontSize: 42, fontWeight: "800", color: ColorConstants.primaryAccent },
-  editAvatar: {
-    backgroundColor: ColorConstants.primaryAccent,
-    padding: 8,
-    borderRadius: 20,
+  verifiedBadge: {
     position: "absolute",
-    bottom: 5,
-    right: -4,
-    elevation: 4,
-  },
-
-  card: {
+    top: 0,
+    left: 0,
     backgroundColor: "#fff",
-    padding: 20,
-    marginHorizontal: 20,
-    borderRadius: 20,
-    marginBottom: 18,
-    elevation: 6,
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
+    borderRadius: 14,
+    padding: 2,
   },
-  row: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 12 },
-  editRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 20 },
-
-  name: { flex: 1, fontSize: 19, fontWeight: "700", color: "#111" },
-  nameInput: {
+  scrollView: {
     flex: 1,
-    fontSize: 19,
-    borderBottomWidth: 1.5,
-    borderColor: ColorConstants.primaryAccent,
-    paddingBottom: 4,
   },
-  text: { fontSize: 15, color: "#555" },
-
-  menu: { flexDirection: "row", gap: 20, alignItems: "center", paddingVertical: 14 },
-  menuText: { fontSize: 16, flex: 1, color: "#333" },
-  sep: { height: 1, backgroundColor: "#eee", marginVertical: 8 },
-
-  version: { textAlign: "center", marginTop: 12, fontSize: 12, opacity: 0.6 },
+  scrollContent: {
+    paddingTop: 80,
+    paddingBottom: 40,
+  },
+  contentWrapper: {
+    paddingHorizontal: 20,
+  },
+  userName: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0F172A",
+    textAlign: "center",
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  userBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#D1FAE5",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: "center",
+    marginBottom: 32,
+  },
+  userBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#059669",
+  },
+  section: {
+    paddingTop: 34,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#28abbdff",
+    letterSpacing: 1.2,
+    marginBottom: 22,
+    marginLeft: 4,
+  },
+  infoCardsContainer: {
+    gap: 12,
+  },
+  infoCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 18,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  infoIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748B",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  infoValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  copyButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#EEF2FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  menuContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+  },
+  menuIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 3,
+  },
+  menuSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "500",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginLeft: 82,
+  },
+  appInfo: {
+    alignItems: "center",
+    marginTop: 32,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+  },
+  appVersion: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#64748B",
+    marginBottom: 4,
+  },
+  appCopyright: {
+    fontSize: 12,
+    color: "#94A3B8",
+    fontWeight: "500",
+  },
 });
