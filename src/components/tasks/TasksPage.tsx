@@ -163,7 +163,8 @@ const EnhancedTaskCard: React.FC<{
         <View style={enhancedStyles.footerItem}>
           <Ionicons name="calendar-outline" size={14} color="#6B7280" />
           <Text style={enhancedStyles.footerText}>
-            Due: {formatDate(task.dueDate)}
+            Due: {formatDate(String(task.dueDate))
+}
           </Text>
         </View>
         <View style={enhancedStyles.footerItem}>
