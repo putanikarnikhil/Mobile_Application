@@ -11,6 +11,7 @@ import { uploadPhoto } from "./services/upload-photo";
 
 
 export interface User {
+  _id: string;
   name: string;
   email: string;
 }
@@ -108,7 +109,8 @@ const App: React.FC = () => {
     user: User | null;
     view: "login" | "tasks";
   }>({
-    user: { name: "Nikhil", email: "raj@verdeind.com" }, // Start logged in for easier development
+   user: { _id: "12345", name: "Nikhil", email: "raj@verdeind.com" },
+
     view: "tasks",
   });
 
