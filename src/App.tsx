@@ -109,9 +109,10 @@ const App: React.FC = () => {
     user: User | null;
     view: "login" | "tasks";
   }>({
-   user: { _id: "12345", name: "Nikhil", email: "raj@verdeind.com" },
 
-    view: "tasks",
+    user: null,
+    view: "login",
+
   });
 
   // Root Task State
