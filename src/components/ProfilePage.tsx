@@ -35,6 +35,7 @@ type ProfilePageProps = {
   onGoBack: () => void;
   setAppState: (v: any) => void;
   navigation: any;
+  route: any;
 };
 
 export default function ProfilePage({
