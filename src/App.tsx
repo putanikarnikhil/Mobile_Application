@@ -117,7 +117,7 @@ const App: React.FC = () => {
 
   // Root Task State
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [activeSection, setActiveSection] = useState<string>("Active Tasks");
+  const [activeSection, setActiveSection] = useState<string>("Pending");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Profile State
