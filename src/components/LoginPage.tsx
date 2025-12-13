@@ -1,4 +1,3 @@
-// components/LoginPage.tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
@@ -9,27 +8,19 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Alert,
-  Animated,
-  Keyboard,
   Platform,
   ScrollView,
-  Dimensions,
 } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import { AuthStackParamList } from "../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useLogin } from "../lib/auth-config";
-import { LinearGradient } from 'expo-linear-gradient';
-
-const { width, height } = Dimensions.get('window');
+import { showSuccessToast, showErrorToast, showInfoToast } from '../lib/toast-config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CustomColorConstants = {
   primaryAccent: "#2155e5",
-  primaryLight: "#4A7BF7",
-  primaryDark: "#1A3FB8",
   danger: "#FF3B30",
-  success: "#34C759",
   mediumText: "#6C7A89",
   faintText: "#A8B2BD",
   darkText: "#1C2833",
@@ -59,38 +50,28 @@ interface LoginPageProps extends LoginPageNavigationProps {
   }) => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ setAppState, navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
-  const emailFocusAnim = useRef(new Animated.Value(0)).current;
-  const passwordFocusAnim = useRef(new Animated.Value(0)).current;
-  const cardEntryAnim = useRef(new Animated.Value(0)).current;
-  const logoAnim = useRef(new Animated.Value(0)).current;
-  const buttonScale = useRef(new Animated.Value(1)).current;
-  
   const scrollViewRef = useRef<ScrollView>(null);
-
   const { mutateAsync: login } = useLogin();
 
   useEffect(() => {
-    // Entry animations
-    Animated.parallel([
-      Animated.spring(cardEntryAnim, {
-        toValue: 1,
-        tension: 40,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    const checkLogoutMessage = async () => {
+      const message = await AsyncStorage.getItem('logoutMessage');
+      if (message) {
+        showInfoToast(message, 'Logged Out');
+        await AsyncStorage.removeItem('logoutMessage');
+      }
+    };
+
+    checkLogoutMessage();
   }, []);
 
   const validateForm = () => {
@@ -116,20 +97,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
   const onLoginPress = async () => {
     if (!validateForm()) return;
 
-    // Button press animation
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     setLoading(true);
 
     try {
@@ -145,11 +112,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
           organisation: result.user.organisation,
         };
 
+        const successMessage = result.message || "Login successful!";
+        await AsyncStorage.setItem('loginSuccessMessage', successMessage);
+
         setAppState({ view: "tasks", user: appUser });
-        Alert.alert("Success", "Welcome back! You're now logged in.");
       }
     } catch (err: any) {
-      Alert.alert("Login Failed", err.message || "Please check your credentials and try again.");
+      const errorMessage = err.response?.data?.message || err.message || "Incorrect email or password";
+      showErrorToast(errorMessage, 'Login Failed');
     } finally {
       setLoading(false);
     }
@@ -159,114 +129,97 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
     label: string,
     value: string,
     setValue: any,
-    anim: Animated.Value,
+    isFocused: boolean,
+    setFocused: any,
     isPassword?: boolean,
     errorMessage?: string,
     icon?: string
   ) => {
-    const [focused, setFocused] = useState(false);
-
-    const labelStyle = {
-      top: anim.interpolate({ inputRange: [0, 1], outputRange: [28, 4] }),
-      fontSize: anim.interpolate({ inputRange: [0, 1], outputRange: [15, 11] }),
-      color: anim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [CustomColorConstants.faintText, CustomColorConstants.primaryAccent],
-      }),
-    };
+    const hasValue = value.length > 0;
+    const shouldFloat = isFocused || hasValue;
 
     const onFocus = () => {
       setFocused(true);
-      Animated.spring(anim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: false,
-      }).start();
-      
-      // Scroll to make button visible when keyboard appears
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 300);
+      }, 100);
     };
 
     const onBlur = () => {
       setFocused(false);
-      if (value === "") {
-        Animated.spring(anim, {
-          toValue: 0,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: false,
-        }).start();
-      }
     };
 
     return (
       <View style={styles.inputGroupContainer}>
-        <Animated.Text
-          style={[
-            styles.floatingLabel,
-            {
-              top: labelStyle.top,
-              fontSize: labelStyle.fontSize,
-              color: errorMessage
-                ? CustomColorConstants.danger
-                : focused
-                ? CustomColorConstants.primaryAccent
-                : CustomColorConstants.faintText,
-            },
-          ]}
-        >
-          {label}
-        </Animated.Text>
-
         <View
           style={[
             styles.inputWrapper,
             {
               borderColor: errorMessage
                 ? CustomColorConstants.danger
-                : focused
-                ? CustomColorConstants.primaryAccent
-                : CustomColorConstants.inputBorder,
-              borderWidth: focused ? 2 : 1.5,
-              backgroundColor: focused ? "#F8FAFF" : CustomColorConstants.surface,
+                : isFocused
+                  ? CustomColorConstants.primaryAccent
+                  : CustomColorConstants.inputBorder,
+              borderWidth: isFocused ? 2 : 1,
+              backgroundColor: isFocused ? "#F8FAFF" : CustomColorConstants.surface,
             },
           ]}
         >
           {icon && (
             <Ionicons
               name={icon as any}
-              size={22}
+              size={18}
               color={
                 errorMessage
                   ? CustomColorConstants.danger
-                  : focused
-                  ? CustomColorConstants.primaryAccent
-                  : CustomColorConstants.mediumText
+                  : isFocused
+                    ? CustomColorConstants.primaryAccent
+                    : CustomColorConstants.mediumText
               }
               style={styles.inputIcon}
             />
           )}
 
-          <TextInput
-            style={styles.textInput}
-            value={value}
-            onChangeText={(text) => {
-              setValue(text);
-              if (errors.email || errors.password) {
-                setErrors({});
-              }
-            }}
-            secureTextEntry={isPassword && !isPasswordVisible}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            autoCapitalize="none"
-            editable={!loading}
-            keyboardType={isPassword ? "default" : "email-address"}
-            placeholderTextColor={CustomColorConstants.faintText}
-          />
+          <View style={styles.inputContent}>
+            {shouldFloat && (
+              <Text
+                style={[
+                  styles.floatingLabel,
+                  {
+                    color: errorMessage
+                      ? CustomColorConstants.danger
+                      : isFocused
+                        ? CustomColorConstants.primaryAccent
+                        : CustomColorConstants.faintText,
+                  },
+                ]}
+              >
+                {label}
+              </Text>
+            )}
+
+            <TextInput
+              style={[
+                styles.textInput,
+                !shouldFloat && styles.textInputPlaceholder,
+              ]}
+              value={value}
+              onChangeText={(text) => {
+                setValue(text);
+                if (errors.email || errors.password) {
+                  setErrors({});
+                }
+              }}
+              placeholder={!shouldFloat ? label : ""}
+              secureTextEntry={isPassword && !isPasswordVisible}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              autoCapitalize="none"
+              editable={!loading}
+              keyboardType={isPassword ? "default" : "email-address"}
+              placeholderTextColor={CustomColorConstants.faintText}
+            />
+          </View>
 
           {isPassword && (
             <TouchableOpacity
@@ -276,7 +229,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
             >
               <Ionicons
                 name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-                size={22}
+                size={18}
                 color={CustomColorConstants.mediumText}
               />
             </TouchableOpacity>
@@ -287,7 +240,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
           <View style={styles.errorContainer}>
             <Ionicons
               name="alert-circle"
-              size={14}
+              size={11}
               color={CustomColorConstants.danger}
             />
             <Text style={styles.errorText}>{errorMessage}</Text>
@@ -297,33 +250,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
     );
   };
 
-  const cardTransform = {
-    opacity: cardEntryAnim,
-    transform: [
-      {
-        translateY: cardEntryAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [50, 0],
-        }),
-      },
-    ],
-  };
-
-  const logoTransform = {
-    opacity: logoAnim,
-    transform: [
-      {
-        scale: logoAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.8, 1],
-        }),
-      },
-    ],
-  };
-
   return (
     <View style={styles.container}>
-      {/* Background gradient decoration */}
       <View style={styles.backgroundDecoration}>
         <View style={[styles.circle, styles.circle1]} />
         <View style={[styles.circle, styles.circle2]} />
@@ -332,22 +260,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Animated.View style={[styles.loginCard, cardTransform]}>
-          <ScrollView
-            ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}
-            bounces={false}
-          >
-            <Animated.View style={[styles.logoContainer, logoTransform]}>
+        <ScrollView
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContainer}
+          bounces={false}
+        >
+          <View style={styles.loginCard}>
+            <View style={styles.logoContainer}>
               <View style={styles.logoBg}>
                 <Image source={logoSource} style={styles.logoImage} />
               </View>
-            </Animated.View>
+            </View>
 
             <Text style={styles.welcomeText}>Welcome Back</Text>
             <Text style={styles.signInText}>
@@ -359,7 +286,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
                 "Email Address",
                 email,
                 setEmail,
-                emailFocusAnim,
+                emailFocused,
+                setEmailFocused,
                 false,
                 errors.email,
                 "mail-outline"
@@ -368,7 +296,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
                 "Password",
                 password,
                 setPassword,
-                passwordFocusAnim,
+                passwordFocused,
+                setPasswordFocused,
                 true,
                 errors.password,
                 "lock-closed-outline"
@@ -377,41 +306,39 @@ const LoginPage: React.FC<LoginPageProps> = ({ setAppState }) => {
               <TouchableOpacity
                 style={styles.forgotPasswordButton}
                 activeOpacity={0.7}
+                onPress={() => navigation.navigate('ForgotPassword')}
               >
                 <Text style={styles.forgotPasswordText}>Forgot password?</Text>
               </TouchableOpacity>
 
-              <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                <TouchableOpacity
-                  onPress={onLoginPress}
-                  style={[styles.loginButton, loading && styles.disabledButton]}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                >
-                  {loading ? (
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator color="#fff" size="small" />
-                      <Text style={styles.loadingText}>Signing in...</Text>
-                    </View>
-                  ) : (
-                    <>
-                      <Text style={styles.loginButtonText}>Sign In</Text>
-                      <Ionicons
-                        name="arrow-forward"
-                        size={20}
-                        color="#fff"
-                        style={styles.buttonIcon}
-                      />
-                    </>
-                  )}
-                </TouchableOpacity>
-              </Animated.View>
+              <TouchableOpacity
+                onPress={onLoginPress}
+                style={[styles.loginButton, loading && styles.disabledButton]}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator color="#fff" size="small" />
+                    <Text style={styles.loadingText}>Signing in...</Text>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.loginButtonText}>Sign In</Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={16}
+                      color="#fff"
+                      style={styles.buttonIcon}
+                    />
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* Extra padding for keyboard */}
-            <View style={{ height: 40 }} />
-          </ScrollView>
-        </Animated.View>
+          <View style={{ height: 80 }} />
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -436,81 +363,84 @@ const styles = StyleSheet.create({
     opacity: 0.06,
   },
   circle1: {
-    width: 400,
-    height: 400,
-    top: -150,
-    right: -120,
+    width: 350,
+    height: 350,
+    top: -120,
+    right: -100,
   },
   circle2: {
-    width: 300,
-    height: 300,
-    bottom: -100,
-    left: -100,
+    width: 250,
+    height: 250,
+    bottom: -80,
+    left: -80,
   },
   circle3: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     top: "40%",
-    right: -80,
+    right: -70,
     opacity: 0.04,
   },
   keyboardAvoidingContainer: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   loginCard: {
     width: "100%",
-    maxWidth: 440,
+    maxWidth: 380,
     backgroundColor: CustomColorConstants.surface,
-    borderRadius: 32,
-    padding: 36,
+    borderRadius: 18,
+    paddingHorizontal: 22,
+    paddingTop: 22,
+    paddingBottom: 26,
     shadowColor: CustomColorConstants.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 40,
-    elevation: 20,
-  },
-  scrollContent: {
-    flexGrow: 1,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 10,
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 28,
+    marginBottom: 14,
   },
   logoBg: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: "#F0F5FF",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: CustomColorConstants.primaryAccent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
   },
   logoImage: {
-    width: 75,
-    height: 75,
+    width: 42,
+    height: 42,
     resizeMode: "contain",
   },
   welcomeText: {
-    fontSize: 34,
-    fontWeight: "800",
+    fontSize: 23,
+    fontWeight: "700",
     textAlign: "center",
     color: CustomColorConstants.darkText,
-    letterSpacing: -0.8,
-    marginBottom: 10,
+    letterSpacing: -0.4,
+    marginBottom: 5,
   },
   signInText: {
-    fontSize: 16,
+    fontSize: 13,
     color: CustomColorConstants.mediumText,
     textAlign: "center",
-    marginBottom: 36,
-    lineHeight: 24,
+    marginBottom: 22,
+    lineHeight: 19,
     fontWeight: "500",
   },
   formContainer: {
@@ -518,81 +448,88 @@ const styles = StyleSheet.create({
   },
   inputGroupContainer: {
     width: "100%",
-    marginBottom: 24,
-  },
-  floatingLabel: {
-    position: "absolute",
-    left: 52,
-    zIndex: 1,
-    backgroundColor: CustomColorConstants.surface,
-    paddingHorizontal: 8,
-    fontWeight: "600",
+    marginBottom: 14,
   },
   inputWrapper: {
     flexDirection: "row",
-    borderRadius: 16,
-    height: 62,
+    borderRadius: 11,
+    minHeight: 48,
     alignItems: "center",
-    paddingHorizontal: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 4,
   },
   inputIcon: {
-    marginRight: 14,
+    marginRight: 9,
+  },
+  inputContent: {
+    flex: 1,
+    justifyContent: "center",
+    paddingVertical: 4,
+  },
+  floatingLabel: {
+    fontWeight: "600",
+    fontSize: 10,
+    marginBottom: 2,
   },
   textInput: {
-    flex: 1,
-    height: "100%",
-    fontSize: 16,
+    fontSize: 14,
     color: CustomColorConstants.darkText,
     fontWeight: "500",
-    paddingTop: 8,
+    padding: 0,
+    margin: 0,
+    height: 22,
+  },
+  textInputPlaceholder: {
+    fontSize: 14,
+    height: 36,
   },
   passwordToggle: {
-    padding: 10,
-    marginLeft: 8,
+    padding: 7,
+    marginLeft: 4,
   },
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 5,
     marginLeft: 4,
   },
   errorText: {
     color: CustomColorConstants.danger,
-    fontSize: 13,
-    marginLeft: 6,
+    fontSize: 11,
+    marginLeft: 4,
     fontWeight: "500",
   },
   forgotPasswordButton: {
     alignSelf: "flex-end",
-    marginBottom: 28,
-    marginTop: 4,
+    marginBottom: 16,
+    marginTop: 2,
   },
   forgotPasswordText: {
     fontWeight: "600",
     color: CustomColorConstants.primaryAccent,
-    fontSize: 15,
+    fontSize: 13,
   },
   loginButton: {
     backgroundColor: CustomColorConstants.primaryAccent,
-    height: 60,
-    borderRadius: 16,
+    height: 46,
+    borderRadius: 11,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
     shadowColor: CustomColorConstants.primaryAccent,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 6,
   },
   loginButtonText: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
     color: "#fff",
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
   },
   buttonIcon: {
-    marginLeft: 10,
+    marginLeft: 7,
   },
   disabledButton: {
     opacity: 0.7,
@@ -603,8 +540,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: "#fff",
-    marginLeft: 12,
-    fontSize: 17,
+    marginLeft: 9,
+    fontSize: 14,
     fontWeight: "600",
   },
 });

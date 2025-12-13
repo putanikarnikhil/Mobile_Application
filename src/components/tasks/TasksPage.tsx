@@ -22,6 +22,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../../services/get-user-tasks";
 import { useUser } from "../../lib/auth-config";
 import { mapApiItemToTask } from "../../utils/transformations/task-transform";
+import { showSuccessToast } from '../../lib/toast-config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -131,7 +134,7 @@ const EnhancedTaskCard: React.FC<{
       {/* Task Type */}
       {task.taskType && (
         <View style={enhancedStyles.taskTypeContainer}>
-          <Ionicons name="briefcase-outline" size={16} color="#6B7280" />
+          <Ionicons name="briefcase-outline" size={14} color="#6B7280" />
           <Text style={enhancedStyles.taskType}>{task.taskType}</Text>
         </View>
       )}
@@ -139,20 +142,20 @@ const EnhancedTaskCard: React.FC<{
       {/* Factory & Stage Info */}
       <View style={enhancedStyles.infoRow}>
         <View style={enhancedStyles.infoItem}>
-          <Ionicons name="business-outline" size={16} color="#6B7280" />
+          <Ionicons name="business-outline" size={14} color="#6B7280" />
           <View style={enhancedStyles.infoTextContainer}>
             <Text style={enhancedStyles.infoLabel}>Factory</Text>
-            <Text style={enhancedStyles.infoValue}>
+            <Text style={enhancedStyles.infoValue} numberOfLines={1}>
               {task.factory || "N/A"}
             </Text>
           </View>
         </View>
         {task.stageName && (
           <View style={enhancedStyles.infoItem}>
-            <Ionicons name="layers-outline" size={16} color="#6B7280" />
+            <Ionicons name="layers-outline" size={14} color="#6B7280" />
             <View style={enhancedStyles.infoTextContainer}>
               <Text style={enhancedStyles.infoLabel}>Stage</Text>
-              <Text style={enhancedStyles.infoValue}>{task.stageName}</Text>
+              <Text style={enhancedStyles.infoValue} numberOfLines={1}>{task.stageName}</Text>
             </View>
           </View>
         )}
@@ -161,21 +164,20 @@ const EnhancedTaskCard: React.FC<{
       {/* Due Date & Order ID */}
       <View style={enhancedStyles.footerRow}>
         <View style={enhancedStyles.footerItem}>
-          <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+          <Ionicons name="calendar-outline" size={12} color="#6B7280" />
           <Text style={enhancedStyles.footerText}>
-            Due: {formatDate(String(task.dueDate))
-}
+            Due: {formatDate(String(task.dueDate))}
           </Text>
         </View>
         <View style={enhancedStyles.footerItem}>
-          <Ionicons name="document-text-outline" size={14} color="#6B7280" />
-          <Text style={enhancedStyles.footerText}>Order: {task.orderId}</Text>
+          <Ionicons name="document-text-outline" size={12} color="#6B7280" />
+          <Text style={enhancedStyles.footerText} numberOfLines={1}>Order: {task.orderId}</Text>
         </View>
       </View>
 
       {/* Arrow Indicator */}
       <View style={enhancedStyles.arrowContainer}>
-        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </View>
     </TouchableOpacity>
   );
@@ -206,6 +208,18 @@ const TasksPage: React.FC<TasksPageProps> = ({
       }),
     enabled: !!token,
   });
+
+  useEffect(() => {
+    const checkLoginMessage = async () => {
+      const message = await AsyncStorage.getItem('loginSuccessMessage');
+      if (message) {
+        showSuccessToast(message, 'Welcome Back!');
+        await AsyncStorage.removeItem('loginSuccessMessage');
+      }
+    };
+
+    checkLoginMessage();
+  }, []);
 
   useEffect(() => {
     const autoTab = route.params?.autoSelectTab;
@@ -240,7 +254,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
 
   return (
     <View style={[{ paddingTop: insets.top, flex: 1 }, styles.safeArea]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
 
       {/* ENHANCED HEADER */}
       <View style={enhancedStyles.header}>
@@ -270,7 +284,6 @@ const TasksPage: React.FC<TasksPageProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* ENHANCED TABS */}
       <View style={enhancedStyles.tabsContainer}>
         <ScrollView
           horizontal
@@ -315,7 +328,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
       >
         {/* ENHANCED SEARCH */}
         <View style={enhancedStyles.searchContainer}>
-          <Ionicons name="search" size={20} color="#9CA3AF" />
+          <Ionicons name="search" size={18} color="#9CA3AF" />
           <TextInput
             style={enhancedStyles.searchInput}
             placeholder="Search by Order ID, Task ID, or Factory"
@@ -325,7 +338,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
             </TouchableOpacity>
           )}
         </View>
@@ -342,7 +355,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
             ))
           ) : (
             <View style={enhancedStyles.emptyState}>
-              <Ionicons name="folder-open-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="folder-open-outline" size={52} color="#D1D5DB" />
               <Text style={enhancedStyles.emptyStateTitle}>No tasks found</Text>
               <Text style={enhancedStyles.emptyStateText}>
                 {searchQuery
@@ -363,44 +376,44 @@ const enhancedStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: "#111827",
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#6B7280",
     marginTop: 2,
   },
   profileButton: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
   },
   profileImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 2,
     borderColor: "#E5E7EB",
   },
   profilePlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: "#3B82F6",
     justifyContent: "center",
     alignItems: "center",
   },
   profileText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
   },
@@ -412,20 +425,20 @@ const enhancedStyles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   tabsScrollContent: {
-    paddingHorizontal: 16,
-    gap: 8,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 6,
+    paddingVertical: 10,
   },
   tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 2,
     position: "relative",
   },
   activeTab: {
     backgroundColor: "transparent",
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "500",
     color: "#6B7280",
   },
@@ -435,10 +448,10 @@ const enhancedStyles = StyleSheet.create({
   },
   tabIndicator: {
     position: "absolute",
-    bottom: -12,
+    bottom: -10,
     left: 0,
     right: 0,
-    height: 3,
+    height: 2.5,
     backgroundColor: "#3B82F6",
     borderRadius: 2,
   },
@@ -448,134 +461,133 @@ const enhancedStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 8,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginTop: 12,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: "#111827",
-    marginLeft: 12,
+    marginLeft: 10,
     padding: 0,
   },
 
   // Scroll Content
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
 
   // Task List
   taskList: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
 
   // Task Card Styles
   taskCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    position: "relative",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 4,
-    elevation: 2,
-    position: "relative",
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     flex: 1,
   },
   taskId: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#111827",
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    gap: 5,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
   },
   priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
   },
   priorityText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "700",
     color: "#FFFFFF",
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   taskTypeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    gap: 6,
+    marginBottom: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     backgroundColor: "#F9FAFB",
-    borderRadius: 8,
+    borderRadius: 6,
     alignSelf: "flex-start",
   },
   taskType: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#374151",
   },
   infoRow: {
     flexDirection: "row",
-    gap: 16,
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 10,
   },
   infoItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
+    gap: 6,
     flex: 1,
   },
   infoTextContainer: {
     flex: 1,
   },
   infoLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#9CA3AF",
     marginBottom: 2,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
     fontWeight: "600",
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#374151",
     fontWeight: "500",
   },
@@ -583,45 +595,47 @@ const enhancedStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "#F3F4F6",
   },
   footerItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
+    flex: 1,
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6B7280",
     fontWeight: "500",
+    flex: 1,
   },
   arrowContainer: {
     position: "absolute",
-    right: 16,
+    right: 14,
     top: "50%",
-    marginTop: -10,
+    marginTop: -9,
   },
 
   // Empty State
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 60,
+    paddingVertical: 50,
   },
   emptyStateTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#374151",
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 14,
+    marginBottom: 6,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#9CA3AF",
     textAlign: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
   },
 });
 

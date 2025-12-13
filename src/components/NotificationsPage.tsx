@@ -17,7 +17,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ onGoBack }) => {
   const insets = useSafeAreaInsets();
   return (
     <View style={[{ paddingTop: insets.top }, styles.profileSafeArea]}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content " />
       <View style={styles.profileHeader}>
         <Text style={styles.profileTitle}>Notifications</Text>
         <TouchableOpacity onPress={onGoBack}>

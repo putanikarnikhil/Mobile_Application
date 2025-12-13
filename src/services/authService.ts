@@ -57,6 +57,7 @@ class AuthService {
       await AsyncStorage.setItem("token", token);
 
       log.info("✅ Login successful - Token and user data stored");
+
       debugAsyncStorage();
 
       return response.data;
@@ -66,37 +67,58 @@ class AuthService {
         error.response?.data?.message || error.message
       );
 
+      // Clean up storage
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("userData");
+      await debugAsyncStorage();
 
-      await debugAsyncStorage(); // 👈 add await here
-
-      throw new Error(
+      // Extract error message from backend or use default
+      const errorMessage =
         error.response?.data?.message ||
-          error.message ||
-          "Network error. Try again."
-      );
+        error.response?.data?.error ||
+        error.message ||
+        "Network error. Try again.";
+
+      // ✅ THROW the error so it can be caught in auth-config
+      throw new Error(errorMessage);
     }
   }
 
   async logout(): Promise<LogoutResponse> {
     try {
       log.info("▶ Logout Request Fired");
-      await api.get<LogoutResponse>("/user/logout");
+
+      const response = await api.get<LogoutResponse>("/user/logout");
       log.info("✅ Logout API call successful");
+
+      // 👇 Extract actual data safely
+      const result = response.data;
+
+      // Clear local storage
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("userData");
+
+      log.info("✅ Local storage cleared");
+      debugAsyncStorage();
+
+      // 👇 Return API's own message
+      return result;
+
     } catch (error) {
       log.warn("⚠ Logout request failed, but continuing cleanup...");
+
+      // Still clear storage
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("userData");
+
+      log.info("✅ Local storage cleared");
+      debugAsyncStorage();
+
+      // 👇 On error, return consistent structure
+      return { success: false, message: "Logout failed" };
     }
-
-    // ✅ Always clear local storage regardless of API response
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("userData");
-
-    log.info("✅ Local storage cleared");
-    debugAsyncStorage();
-
-    return { success: true, message: "Logged out successfully" };
   }
+
 
   async getUserData(): Promise<{
     user: UserData | null;

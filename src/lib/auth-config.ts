@@ -9,6 +9,7 @@ export interface UserResponse {
   user: UserData | null;
   token: string | null;
   error: Error | null;
+  message?: string; // ADD THIS
 }
 
 const authConfig = {
@@ -33,11 +34,13 @@ const authConfig = {
   loginFn: async (credentials: LoginCredentials): Promise<UserResponse> => {
     try {
       const response: LoginResponse = await authService.login(credentials);
-      const { user, token } = response;
+      const { user, token, message } = response;
 
-      return { user, token, error: null };
+      return { user, token, error: null, message };
     } catch (error: any) {
-      return { user: null, token: null, error };
+      // ✅ THROW the error instead of returning it
+      // This makes react-query treat it as a failure
+      throw error;
     }
   },
 
@@ -52,8 +55,8 @@ const authConfig = {
 
   logoutFn: async () => {
     try {
-      await authService.logout();
-      return null;
+      const rep = await authService.logout();
+      return rep;
     } catch (err) {
       return err;
     }

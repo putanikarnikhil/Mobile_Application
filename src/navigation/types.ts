@@ -4,6 +4,7 @@ import { StackScreenProps } from "@react-navigation/stack";
 // --- 1. Auth Stack ---
 export type AuthStackParamList = {
   Login: undefined;
+  ForgotPassword: undefined;
 };
 
 // --- 2. Task Stack (Nested within MainTabs) ---

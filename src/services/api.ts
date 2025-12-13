@@ -2,10 +2,11 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { log } from "../config/logger-config";
+import Constants from "expo-constants";
 
-// LOCAL API URL
-const API_BASE_URL = "http://192.168.100.238:8000/api/v1";
-
+const API_BASE_URL =
+  Constants.expoConfig?.extra?.API_BASE_URL ??
+  "http://default-fallback-url.com";
 
 export const debugAsyncStorage = async () => {
   try {

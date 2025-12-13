@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useState, useMemo } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { ColorConstants } from "./AppStyles";
@@ -8,7 +7,7 @@ import AppNavigator from "./navigation/AppNavigator";
 import { AuthLoader } from "./lib/auth-config";
 import { AuthProvider } from "./stores/auth-context";
 import { uploadPhoto } from "./services/upload-photo";
-
+import Toast from 'react-native-toast-message'; // ADD THIS
 
 export interface User {
   _id: string;
@@ -16,17 +15,22 @@ export interface User {
   email: string;
 }
 
-// CRITICAL FIX: Define the SubmissionData type for TypeScript to recognize it
 export interface SubmissionData {
   auditComment: string;
-  submittedOn: string; // ISO date string
+  submittedOn: string;
   location: LocationData;
 }
 
 export interface Task {
   stageName: React.JSX.Element;
-  _id(_id: any, status: string, images: string[], comment: string, arg4: LocationData | undefined): unknown;
-    address?: {
+  _id(
+    _id: any,
+    status: string,
+    images: string[],
+    comment: string,
+    arg4: LocationData | undefined
+  ): unknown;
+  address?: {
     latitude: number;
     longitude: number;
     fullAddress: string;
@@ -52,44 +56,33 @@ export interface Task {
   isRejected: boolean;
   photos: string[];
   comments: string;
-
   submissionData?: SubmissionData;
-
-  
 }
-
 
 export type LocationData = {
   latitude: number;
   longitude: number;
   address: string;
-details?: {
-  name?: string | null;
-  street?: string | null;
-  district?: string | null;
-  city?: string | null;
-  subregion?: string | null;
-  region?: string | null;
-  postalCode?: string | null;
-  country?: string | null;
+  details?: {
+    name?: string | null;
+    street?: string | null;
+    district?: string | null;
+    city?: string | null;
+    subregion?: string | null;
+    region?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
 };
 
-};
-
-
-// Define the root application state structure
 export interface AppState {
   user: User | null;
   view: "login" | "tasks";
   activeSection: string;
-
-  // State setters (passed to TaskDetailPage via AppState)
   images: string[];
   setImages: React.Dispatch<React.SetStateAction<string[]>>;
   comment: string;
   setComment: React.Dispatch<React.SetStateAction<string>>;
-
-  // Function to persist task updates (Critical for submission data)
   updateTaskStatus: (
     taskId: string,
     newStatus: Task["status"],
@@ -99,78 +92,65 @@ export interface AppState {
   ) => void;
 }
 
-const INITIAL_TASKS: Task[] = [
-  
-];
+const INITIAL_TASKS: Task[] = [];
 
 const App: React.FC = () => {
-  // Authentication State
   const [appAuthState, setAppAuthState] = useState<{
     user: User | null;
     view: "login" | "tasks";
   }>({
-
     user: null,
     view: "login",
-
   });
 
-  // Root Task State
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [activeSection, setActiveSection] = useState<string>("Pending");
   const [searchQuery, setSearchQuery] = useState<string>("");
-
-  // Profile State
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  // Temporary State for TaskDetailPage (images/comments being collected for current task)
   const [tempImages, setTempImages] = useState<string[]>([]);
   const [tempComment, setTempComment] = useState<string>("");
 
-  // CRITICAL FUNCTION: Persists submission data into the main tasks array
-const updateTaskStatus = async (
-  taskId: string,
-  newStatus: Task["status"],
-  newImages: string[],
-  newComment: string,
-  locationData?: LocationData
-) => {
+  const updateTaskStatus = async (
+    taskId: string,
+    newStatus: Task["status"],
+    newImages: string[],
+    newComment: string,
+    locationData?: LocationData
+  ) => {
+    const uploadedUrls: string[] = [];
 
-  const uploadedUrls: string[] = [];
+    for (const fileUri of newImages) {
+      const uploadedUrl = await uploadPhoto(fileUri);
+      uploadedUrls.push(uploadedUrl);
+    }
 
-  for (const fileUri of newImages) {
-    const uploadedUrl = await uploadPhoto(fileUri);
-    uploadedUrls.push(uploadedUrl);
-  }
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              status: newStatus,
+              isSubmitted: newStatus === "Accepted",
+              isRejected: newStatus === "Rejected",
+              isCompleted: newStatus === "Completed",
+              photos: uploadedUrls,
+              comments: newComment,
+              submissionData: locationData
+                ? {
+                    auditComment: newComment,
+                    submittedOn: new Date().toISOString(),
+                    location: locationData,
+                  }
+                : task.submissionData,
+            }
+          : task
+      )
+    );
 
-  setTasks(prev =>
-    prev.map(task =>
-      task.id === taskId
-        ? {
-            ...task,
-            status: newStatus,
-            isSubmitted: newStatus === "Accepted",
-            isRejected: newStatus === "Rejected",
-            isCompleted: newStatus === "Completed",
-            photos: uploadedUrls,
-            comments: newComment,
-            submissionData: locationData
-              ? {
-                  auditComment: newComment,
-                  submittedOn: new Date().toISOString(),
-                  location: locationData,
-                }
-              : task.submissionData,
-          }
-        : task
-    )
-  );
+    setTempImages([]);
+    setTempComment("");
+  };
 
-  setTempImages([]);
-  setTempComment("");
-};
-
-  // Combine state and setters into a single AppState object for easy prop drilling
   const appState: AppState & {
     setProfileImage: React.Dispatch<React.SetStateAction<string | null>>;
   } = useMemo(
@@ -178,14 +158,12 @@ const updateTaskStatus = async (
       user: appAuthState.user,
       view: appAuthState.view,
       activeSection: activeSection,
-
       images: tempImages,
       setImages: setTempImages,
       comment: tempComment,
       setComment: setTempComment,
-
       updateTaskStatus: updateTaskStatus,
-      setProfileImage: setProfileImage,  
+      setProfileImage: setProfileImage,
     }),
     [
       appAuthState.user,
@@ -197,13 +175,13 @@ const updateTaskStatus = async (
     ]
   );
 
-  //query client tanstack
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: queryConfig,
       })
   );
+
   return (
     <View style={styles.container}>
       <QueryClientProvider client={queryClient}>
@@ -234,6 +212,9 @@ const updateTaskStatus = async (
           </AuthLoader>
         </AuthProvider>
       </QueryClientProvider>
+      
+      {/* ADD THIS - Toast component at the root */}
+      <Toast />
     </View>
   );
 };

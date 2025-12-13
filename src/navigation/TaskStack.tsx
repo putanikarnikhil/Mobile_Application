@@ -1,11 +1,16 @@
 // navigation/TaskStack.tsx
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
+import { Alert } from "react-native";
 import TasksPage from "../components/tasks/TasksPage";
 import TaskDetailPage from "../components/tasks/TaskDetailPage";
 import { Task, AppState, User, LocationData } from "../App";
 import { TaskStackParamList } from "./types";
-import { updateTaskStatus } from "../services/update-task-status"; 
+import { 
+  submitTaskWithImagesAndLocation, 
+  rejectTask 
+} from "../services/update-task-status";
+import { log } from "../config/logger-config";
 
 const Stack = createStackNavigator<TaskStackParamList>();
 
@@ -25,23 +30,68 @@ interface TaskStackProps {
 }
 
 const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
-  // FINAL Backend Update Handler
+  /**
+   * Main task update handler - orchestrates API calls
+   */
   const onTaskUpdate = async (
-    id: string,
+    taskId: string,
     status: Task["status"],
     images: string[],
     comment: string,
     location?: LocationData
   ) => {
+    if (!location) {
+      throw new Error("Location is required for task submission");
+    }
+
     try {
-      await updateTaskStatus(id, {
+      log.debug("🚀 Starting task submission...", {
+        taskId,
         status,
-        pictures: images,
-        remarks: comment,
-        address: location,
+        imagesCount: images.length,
+        hasComment: !!comment,
+        hasLocation: !!location,
       });
-    } catch (err) {
-      console.error("Failed to update task:", err);
+
+      // Handle rejection separately
+      if (status === "Rejected") {
+        await rejectTask(
+          taskId,
+          comment || "Task rejected by auditor",
+          location
+        );
+        
+        log.debug("✅ Task rejected successfully");
+        return;
+      }
+
+      // Handle completion with images and location
+      if (status === "Completed") {
+        await submitTaskWithImagesAndLocation(
+          taskId,
+          images,
+          comment,
+          location,
+          "Completed"
+        );
+
+        log.debug("✅ Task completed successfully");
+        return;
+      }
+
+      // Other status updates (if needed in future)
+      log.warn("⚠️ Unhandled status:", status);
+
+    } catch (err: any) {
+      log.error("❌ Task update failed:", err);
+      
+      // Re-throw with user-friendly message
+      const errorMessage = 
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to submit task. Please try again.";
+      
+      throw new Error(errorMessage);
     }
   };
 
@@ -68,7 +118,7 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
             <TaskDetailPage
               task={task}
               onGoBack={() => navigation.goBack()}
-              onTaskUpdate={onTaskUpdate} 
+              onTaskUpdate={onTaskUpdate}
               images={props.appState.images}
               setImages={props.appState.setImages}
               comment={props.appState.comment}
