@@ -6,36 +6,45 @@ export default {
     slug: "testing-app",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./src/assets/thumbnail_image005.png",
+
+    // ✅ MAIN ICON (from src)
+    icon: "./src/assets/icon.png",
+
     userInterfaceStyle: "light",
     newArchEnabled: true,
+
     splash: {
       image: "./src/assets/splash-icon.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
+
     updates: {
       url: "https://u.expo.dev/your-project-id",
       checkAutomatically: "ON_LOAD",
     },
+
     runtimeVersion: "exposdk:54.0.0",
+
     ios: {
       supportsTablet: true,
     },
+
+    // ✅ ANDROID APK ICON FIX
     android: {
-      // adaptiveIcon: {
-      //   foregroundImage: "./src/assets/adaptive-icon.png",
-      //   backgroundColor: "#ffffff",
-      // },
+      adaptiveIcon: {
+        foregroundImage: "./src/assets/adaptive-icon.png",
+        backgroundColor: "#ffffff", // or brand color
+      },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: "com.anonymous.testingapp",
     },
+
     web: {
-      favicon: "./assets/favicon.png",
+      favicon: "./src/assets/icon.png",
     },
 
-    // ✅ UPDATED extra block with EAS projectId
     extra: {
       API_BASE_URL: process.env.API_BASE_URL,
       eas: {
