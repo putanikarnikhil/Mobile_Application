@@ -34,7 +34,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./src/assets/adaptive-icon.png",
-        backgroundColor: "#ffffff", // or brand color
+        backgroundColor: "#ffffff", 
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
