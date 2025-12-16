@@ -2,15 +2,15 @@ import "dotenv/config";
 
 export default {
   expo: {
-    name: "VIMS",
+    name: "VERDE-AUDIT",
     slug: "testing-app",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/thumbnail_image005.png",
+    icon: "./src/assets/thumbnail_image005.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
-      image: "./assets/splash-icon.png",
+      image: "./src/assets/splash-icon.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
