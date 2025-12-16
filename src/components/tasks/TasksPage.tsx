@@ -22,9 +22,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUserTasks } from "../../services/get-user-tasks";
 import { useUser } from "../../lib/auth-config";
 import { mapApiItemToTask } from "../../utils/transformations/task-transform";
-import { showSuccessToast } from '../../lib/toast-config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { showSuccessToast } from "../../lib/toast-config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type TasksPageNavigationProp = StackNavigationProp<
   TaskStackParamList & RootStackParamList,
@@ -155,7 +154,9 @@ const EnhancedTaskCard: React.FC<{
             <Ionicons name="layers-outline" size={14} color="#6B7280" />
             <View style={enhancedStyles.infoTextContainer}>
               <Text style={enhancedStyles.infoLabel}>Stage</Text>
-              <Text style={enhancedStyles.infoValue} numberOfLines={1}>{task.stageName}</Text>
+              <Text style={enhancedStyles.infoValue} numberOfLines={1}>
+                {task.stageName}
+              </Text>
             </View>
           </View>
         )}
@@ -171,7 +172,9 @@ const EnhancedTaskCard: React.FC<{
         </View>
         <View style={enhancedStyles.footerItem}>
           <Ionicons name="document-text-outline" size={12} color="#6B7280" />
-          <Text style={enhancedStyles.footerText} numberOfLines={1}>Order: {task.orderId}</Text>
+          <Text style={enhancedStyles.footerText} numberOfLines={1}>
+            Order: {task.orderId}
+          </Text>
         </View>
       </View>
 
@@ -196,7 +199,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
   const { data: userData } = useUser();
   const userId = userData?.user?._id;
   const token = userData?.token;
-
+  const user = userData?.user;
   const selectedStatus = appState.activeSection;
 
   const { data, refetch, isFetching } = useQuery({
@@ -211,10 +214,10 @@ const TasksPage: React.FC<TasksPageProps> = ({
 
   useEffect(() => {
     const checkLoginMessage = async () => {
-      const message = await AsyncStorage.getItem('loginSuccessMessage');
+      const message = await AsyncStorage.getItem("loginSuccessMessage");
       if (message) {
-        showSuccessToast(message, 'Welcome Back!');
-        await AsyncStorage.removeItem('loginSuccessMessage');
+        showSuccessToast(message, "Welcome Back!");
+        await AsyncStorage.removeItem("loginSuccessMessage");
       }
     };
 
@@ -277,7 +280,7 @@ const TasksPage: React.FC<TasksPageProps> = ({
           ) : (
             <View style={enhancedStyles.profilePlaceholder}>
               <Text style={enhancedStyles.profileText}>
-                {appState.user?.name.charAt(0).toUpperCase()}
+                {user?.fullName.charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
@@ -311,7 +314,9 @@ const TasksPage: React.FC<TasksPageProps> = ({
               >
                 {tab}
               </Text>
-              {selectedStatus === tab && <View style={enhancedStyles.tabIndicator} />}
+              {selectedStatus === tab && (
+                <View style={enhancedStyles.tabIndicator} />
+              )}
             </TouchableOpacity>
           ))}
         </ScrollView>

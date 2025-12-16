@@ -6,9 +6,9 @@ import TasksPage from "../components/tasks/TasksPage";
 import TaskDetailPage from "../components/tasks/TaskDetailPage";
 import { Task, AppState, User, LocationData } from "../App";
 import { TaskStackParamList } from "./types";
-import { 
-  submitTaskWithImagesAndLocation, 
-  rejectTask 
+import {
+  submitTaskWithImagesAndLocation,
+  rejectTask,
 } from "../services/update-task-status";
 import { log } from "../config/logger-config";
 
@@ -60,7 +60,7 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
           comment || "Task rejected by auditor",
           location
         );
-        
+
         log.debug("✅ Task rejected successfully");
         return;
       }
@@ -81,16 +81,15 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
 
       // Other status updates (if needed in future)
       log.warn("⚠️ Unhandled status:", status);
-
     } catch (err: any) {
       log.error("❌ Task update failed:", err);
-      
+
       // Re-throw with user-friendly message
-      const errorMessage = 
-        err.response?.data?.message || 
-        err.message || 
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
         "Failed to submit task. Please try again.";
-      
+
       throw new Error(errorMessage);
     }
   };
@@ -104,10 +103,7 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
     >
       <Stack.Screen name="TasksList">
         {() => (
-          <TasksPage
-            {...props}
-            setActiveSection={props.setActiveSection}
-          />
+          <TasksPage {...props} setActiveSection={props.setActiveSection} />
         )}
       </Stack.Screen>
 

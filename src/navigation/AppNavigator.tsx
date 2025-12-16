@@ -24,8 +24,7 @@ interface Props {
 
 const AppNavigator: React.FC<Props> = (props) => {
   const { data: user } = useUser();
-  console.log("asd",user);
-  
+
   return (
     <NavigationContainer>
       {user?.user ? (

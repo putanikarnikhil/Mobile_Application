@@ -103,7 +103,6 @@ class AuthService {
 
       // 👇 Return API's own message
       return result;
-
     } catch (error) {
       log.warn("⚠ Logout request failed, but continuing cleanup...");
 
@@ -118,7 +117,6 @@ class AuthService {
       return { success: false, message: "Logout failed" };
     }
   }
-
 
   async getUserData(): Promise<{
     user: UserData | null;

@@ -17,7 +17,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLogout } from "../lib/auth-config";
+import { useLogout, useUser } from "../lib/auth-config";
 import { ColorConstants } from "../AppStyles";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
@@ -40,7 +40,6 @@ type ProfilePageProps = {
 };
 
 export default function ProfilePage({
-  user,
   profileImage,
   setProfileImage,
   onGoBack,
@@ -50,7 +49,10 @@ export default function ProfilePage({
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const { mutateAsync: logout } = useLogout();
-  const initial = user.name.charAt(0).toUpperCase();
+  const user1 = useUser();
+  const initial = user1?.data?.user?.fullName.charAt(0).toUpperCase();
+
+  const user = user1?.data?.user;
 
   // Animations
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -74,7 +76,6 @@ export default function ProfilePage({
     ]).start();
   }, []);
 
-
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
@@ -84,11 +85,14 @@ export default function ProfilePage({
         onPress: async () => {
           setLoading(true);
           try {
-            const result = await logout({}) as { message: string; success: boolean };
-            await AsyncStorage.setItem('logoutMessage', result.message);
+            const result = (await logout({})) as {
+              message: string;
+              success: boolean;
+            };
+            await AsyncStorage.setItem("logoutMessage", result.message);
             setAppState({ user: null, view: "login" });
           } catch (error) {
-            console.error('Logout error:', error);
+            console.error("Logout error:", error);
           } finally {
             setLoading(false);
           }
@@ -98,7 +102,7 @@ export default function ProfilePage({
   };
 
   const copyID = () => {
-    Clipboard.setString(user._id);
+    Clipboard.setString(user?._id || "");
     Alert.alert("Copied!", "User ID copied to clipboard");
   };
 
@@ -262,7 +266,7 @@ export default function ProfilePage({
           ]}
         >
           {/* User name */}
-          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userName}>{user?.fullName}</Text>
 
           {/* Info Cards */}
           <View style={styles.section}>
@@ -271,13 +275,13 @@ export default function ProfilePage({
               <InfoCard
                 icon="mail"
                 label="Email Address"
-                value={user.email}
+                value={user?.email}
                 iconColor="#3B82F6"
               />
               <InfoCard
                 icon="finger-print"
                 label="User ID"
-                value={user._id}
+                value={user?._id}
                 onPress={copyID}
                 iconColor="#8B5CF6"
               />
