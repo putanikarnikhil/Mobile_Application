@@ -2,7 +2,7 @@ import "dotenv/config";
 
 export default {
   expo: {
-    name: "VERDE-AUDIT",
+    name: "VIMS",
     slug: "testing-app",
     version: "1.0.0",
     orientation: "portrait",
@@ -34,7 +34,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./src/assets/thumbnail_image005.png",
-        backgroundColor: "#ffffff", 
+        backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
