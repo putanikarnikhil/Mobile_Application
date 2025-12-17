@@ -14,7 +14,7 @@ export default {
     newArchEnabled: true,
 
     splash: {
-      image: "./src/assets/vims.jpg",
+      image: "./src/assets/vims.jpeg",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
