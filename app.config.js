@@ -33,7 +33,7 @@ export default {
     // ✅ ANDROID APK ICON FIX
     android: {
       adaptiveIcon: {
-        foregroundImage: "./src/assets/adaptive-icon.png",
+        foregroundImage: "./src/assets/thumbnail_image005.png",
         backgroundColor: "#ffffff", 
       },
       edgeToEdgeEnabled: true,
