@@ -14,7 +14,7 @@ export default {
     newArchEnabled: true,
 
     splash: {
-      image: "./src/assets/splash-icon.png",
+      image: "./src/assets/vims.jpg",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
@@ -33,7 +33,7 @@ export default {
     // ✅ ANDROID APK ICON FIX
     android: {
       adaptiveIcon: {
-        foregroundImage: "./src/assets/vims.png",
+        foregroundImage: "./src/assets/vims.jpg",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
@@ -47,9 +47,9 @@ export default {
 
     extra: {
       API_BASE_URL: process.env.API_BASE_URL,
-      "eas": {
-        "projectId": "ef084aab-3bd2-49cf-bf59-46469b40751b"
-      }
+      eas: {
+        projectId: "ef084aab-3bd2-49cf-bf59-46469b40751b",
+      },
     },
   },
 };
