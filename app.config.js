@@ -14,7 +14,7 @@ export default {
     newArchEnabled: true,
 
     splash: {
-      image: "./src/assets/vims.jpeg",
+      image: "./src/assets/vims.jpg",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
@@ -33,7 +33,7 @@ export default {
     // ✅ ANDROID APK ICON FIX
     android: {
       adaptiveIcon: {
-        foregroundImage: "./src/assets/vims.jpeg",
+        foregroundImage: "./src/assets/waving.jpg",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
