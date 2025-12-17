@@ -8,7 +8,7 @@ export default {
     orientation: "portrait",
 
     // ✅ MAIN ICON (from src)
-    icon: "./src/assets/icon.png",
+    icon: "./src/assets/thumbnail_image005.png",
 
     userInterfaceStyle: "light",
     newArchEnabled: true,
