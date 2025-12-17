@@ -47,9 +47,9 @@ export default {
 
     extra: {
       API_BASE_URL: process.env.API_BASE_URL,
-      // eas: {
-      //   projectId: "fb77044f-f5c4-40d8-b03e-1455f4ec4ea0",
-      // },
+      "eas": {
+        "projectId": "ef084aab-3bd2-49cf-bf59-46469b40751b"
+      }
     },
   },
 };
