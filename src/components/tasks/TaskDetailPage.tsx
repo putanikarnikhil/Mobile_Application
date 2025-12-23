@@ -76,14 +76,21 @@ const TaskDetailPage: React.FC<Props> = ({
   const isRejected = task.status === "Rejected";
 
   useEffect(() => {
+    if (isPending) {
+      setImages([]);
+      setComment("");
+    }
+  }, [isPending, task.taskId, setImages, setComment]);
+
+  useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
       (e) => {
         setKeyboardHeight(e.endCoordinates.height);
       }
     );
     const keyboardWillHide = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => {
         setKeyboardHeight(0);
       }
@@ -125,8 +132,9 @@ const TaskDetailPage: React.FC<Props> = ({
       const a = addr?.[0];
 
       const formatted =
-        `${a?.name || ""}, ${a?.street || ""}, ${a?.district || ""}, ${a?.city || a?.subregion || ""
-          }, ${a?.region || ""}, ${a?.postalCode || ""}, ${a?.country || ""}`
+        `${a?.name || ""}, ${a?.street || ""}, ${a?.district || ""}, ${
+          a?.city || a?.subregion || ""
+        }, ${a?.region || ""}, ${a?.postalCode || ""}, ${a?.country || ""}`
           .replace(/,\s*,/g, ", ")
           .replace(/^,\s*|,\s*$/g, "")
           .trim() || "Location captured";
@@ -141,16 +149,19 @@ const TaskDetailPage: React.FC<Props> = ({
       setLocationStatus("success");
       setRetryCount(0);
       setLocationError("");
-
     } catch (error: any) {
       console.error("Location fetch error:", error);
 
       if (error.message?.includes("timeout")) {
         setLocationStatus("timeout");
-        setLocationError("Location fetch timed out. Please ensure GPS is enabled.");
+        setLocationError(
+          "Location fetch timed out. Please ensure GPS is enabled."
+        );
       } else {
         setLocationStatus("error");
-        setLocationError("Unable to fetch location. Please check your settings.");
+        setLocationError(
+          "Unable to fetch location. Please check your settings."
+        );
       }
     }
   }, []);
@@ -162,7 +173,7 @@ const TaskDetailPage: React.FC<Props> = ({
   }, [isPending]);
 
   const handleRetryLocation = () => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
     fetchLocation(true);
   };
 
@@ -219,7 +230,7 @@ const TaskDetailPage: React.FC<Props> = ({
           { text: "Cancel", style: "cancel" },
           {
             text: "Retry Location",
-            onPress: handleRetryLocation
+            onPress: handleRetryLocation,
           },
         ]
       );
@@ -227,9 +238,10 @@ const TaskDetailPage: React.FC<Props> = ({
     }
 
     // Request camera permissions explicitly for iOS
-    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+    const { status: cameraStatus } =
+      await ImagePicker.requestCameraPermissionsAsync();
 
-    if (cameraStatus !== 'granted') {
+    if (cameraStatus !== "granted") {
       Alert.alert(
         "Camera Permission Required",
         "Please enable camera access in Settings to take photos.",
@@ -243,7 +255,7 @@ const TaskDetailPage: React.FC<Props> = ({
               } else {
                 Linking.openSettings();
               }
-            }
+            },
           },
         ]
       );
@@ -306,6 +318,12 @@ const TaskDetailPage: React.FC<Props> = ({
     try {
       await onTaskUpdate(task.id, newStatus, images, comment, location);
 
+      // ✅ ADD THESE LINES - Clear state after successful submission
+      setImages([]);
+      setComment("");
+      setLocation(null);
+      setLocationStatus("idle");
+
       Alert.alert(
         "Success",
         newStatus === "Completed"
@@ -316,7 +334,8 @@ const TaskDetailPage: React.FC<Props> = ({
             text: "OK",
             onPress: () => {
               const parentNav = navigation.getParent();
-              const autoSelectTab = newStatus === "Completed" ? "Completed" : "Rejected";
+              const autoSelectTab =
+                newStatus === "Completed" ? "Completed" : "Rejected";
 
               parentNav?.navigate("MainTabs", {
                 screen: "HomeTab",
@@ -394,20 +413,33 @@ const TaskDetailPage: React.FC<Props> = ({
               style={ui.refreshBtn}
               activeOpacity={0.7}
             >
-              <Ionicons name="refresh" size={18} color={ColorConstants.primaryAccent} />
+              <Ionicons
+                name="refresh"
+                size={18}
+                color={ColorConstants.primaryAccent}
+              />
             </TouchableOpacity>
           </View>
 
           <View style={ui.locationDetails}>
             <View style={ui.locationRow}>
-              <Ionicons name="location" size={16} color={ColorConstants.mediumText} />
+              <Ionicons
+                name="location"
+                size={16}
+                color={ColorConstants.mediumText}
+              />
               <Text style={ui.locationLabel}>Coordinates:</Text>
               <Text style={ui.locationValue}>
-                {location.latitude.toFixed(6)}°, {location.longitude.toFixed(6)}°
+                {location.latitude.toFixed(6)}°, {location.longitude.toFixed(6)}
+                °
               </Text>
             </View>
             <View style={[ui.locationRow, { borderBottomWidth: 0 }]}>
-              <Ionicons name="navigate" size={16} color={ColorConstants.mediumText} />
+              <Ionicons
+                name="navigate"
+                size={16}
+                color={ColorConstants.mediumText}
+              />
               <Text style={ui.locationLabel}>Address:</Text>
               <Text
                 style={[ui.locationValue, { flex: 1, textAlign: "right" }]}
@@ -425,7 +457,11 @@ const TaskDetailPage: React.FC<Props> = ({
       return (
         <View style={ui.errorContainer}>
           <View style={ui.errorIconWrapper}>
-            <Ionicons name="lock-closed" size={40} color={ColorConstants.danger} />
+            <Ionicons
+              name="lock-closed"
+              size={40}
+              color={ColorConstants.danger}
+            />
           </View>
           <Text style={ui.errorTitle}>Permission Denied</Text>
           <Text style={ui.errorMessage}>{locationError}</Text>
@@ -443,7 +479,11 @@ const TaskDetailPage: React.FC<Props> = ({
               onPress={handleRetryLocation}
               activeOpacity={0.8}
             >
-              <Ionicons name="reload" size={18} color={ColorConstants.primaryAccent} />
+              <Ionicons
+                name="reload"
+                size={18}
+                color={ColorConstants.primaryAccent}
+              />
               <Text style={ui.retryBtnText}>Retry</Text>
             </TouchableOpacity>
           </View>
@@ -456,13 +496,19 @@ const TaskDetailPage: React.FC<Props> = ({
         <View style={ui.errorContainer}>
           <View style={ui.errorIconWrapper}>
             <Ionicons
-              name={locationStatus === "timeout" ? "time-outline" : "warning-outline"}
+              name={
+                locationStatus === "timeout"
+                  ? "time-outline"
+                  : "warning-outline"
+              }
               size={40}
               color={ColorConstants.warning}
             />
           </View>
           <Text style={ui.errorTitle}>
-            {locationStatus === "timeout" ? "Location Timeout" : "Location Error"}
+            {locationStatus === "timeout"
+              ? "Location Timeout"
+              : "Location Error"}
           </Text>
           <Text style={ui.errorMessage}>{locationError}</Text>
           <Text style={ui.errorHint}>
@@ -523,9 +569,7 @@ const TaskDetailPage: React.FC<Props> = ({
         </View>
 
         <ScrollView
-          contentContainerStyle={
-            ui.scroll
-          }
+          contentContainerStyle={ui.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -560,17 +604,19 @@ const TaskDetailPage: React.FC<Props> = ({
             <View style={ui.section}>
               <View style={ui.sectionHeader}>
                 <Text style={ui.sectionTitle}>Location Verification</Text>
-                <View style={[
-                  ui.statusBadge,
-                  {
-                    backgroundColor:
-                      locationStatus === "success"
-                        ? ColorConstants.success + "20"
-                        : locationStatus === "fetching"
+                <View
+                  style={[
+                    ui.statusBadge,
+                    {
+                      backgroundColor:
+                        locationStatus === "success"
+                          ? ColorConstants.success + "20"
+                          : locationStatus === "fetching"
                           ? ColorConstants.warning + "20"
                           : ColorConstants.danger + "20",
-                  },
-                ]}>
+                    },
+                  ]}
+                >
                   <Text
                     style={[
                       ui.statusBadgeText,
@@ -579,16 +625,16 @@ const TaskDetailPage: React.FC<Props> = ({
                           locationStatus === "success"
                             ? ColorConstants.success
                             : locationStatus === "fetching"
-                              ? ColorConstants.warning
-                              : ColorConstants.danger,
+                            ? ColorConstants.warning
+                            : ColorConstants.danger,
                       },
                     ]}
                   >
                     {locationStatus === "success"
                       ? "Ready"
                       : locationStatus === "fetching"
-                        ? "Loading"
-                        : "Required"}
+                      ? "Loading"
+                      : "Required"}
                   </Text>
                 </View>
               </View>
@@ -634,8 +680,30 @@ const TaskDetailPage: React.FC<Props> = ({
                 iconColor="#FF3B30"
               />
               <View style={ui.infoCard}>
-                <View style={[ui.iconCircle, { backgroundColor: task.priority === "High" ? "#FF3B30" + "15" : task.priority === "Medium" ? "#FF9500" + "15" : "#34C759" + "15" }]}>
-                  <Ionicons name="flag" size={18} color={task.priority === "High" ? "#FF3B30" : task.priority === "Medium" ? "#FF9500" : "#34C759"} />
+                <View
+                  style={[
+                    ui.iconCircle,
+                    {
+                      backgroundColor:
+                        task.priority === "High"
+                          ? "#FF3B30" + "15"
+                          : task.priority === "Medium"
+                          ? "#FF9500" + "15"
+                          : "#34C759" + "15",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="flag"
+                    size={18}
+                    color={
+                      task.priority === "High"
+                        ? "#FF3B30"
+                        : task.priority === "Medium"
+                        ? "#FF9500"
+                        : "#34C759"
+                    }
+                  />
                 </View>
                 <View style={ui.infoContent}>
                   <Text style={ui.infoLabel}>Priority</Text>
@@ -648,7 +716,7 @@ const TaskDetailPage: React.FC<Props> = ({
           </View>
 
           {/* PRODUCT DETAILS */}
-          {(task.product && task.product !== "N/A") && (
+          {task.product && task.product !== "N/A" && (
             <View style={ui.section}>
               <View style={ui.sectionHeader}>
                 <Text style={ui.sectionTitle}>Product Details</Text>
@@ -664,33 +732,62 @@ const TaskDetailPage: React.FC<Props> = ({
                 {(() => {
                   let orderData = null;
 
-                  if ((task as any).orderStageTrackingObjId?.orderVariantObjId?.orderObjId) {
-                    orderData = (task as any).orderStageTrackingObjId.orderVariantObjId.orderObjId;
-                  }
-                  else if ((task as any).preProductionOrderStageTrackingObjId?.preProductionOrderVariantObjId?.preProductionOrderObjId) {
-                    orderData = (task as any).preProductionOrderStageTrackingObjId.preProductionOrderVariantObjId.preProductionOrderObjId;
-                  }
-                  else if ((task as any).productionOrderStageTrackingObjId?.productionOrderVariantObjId?.productionOrderObjId) {
-                    orderData = (task as any).productionOrderStageTrackingObjId.productionOrderVariantObjId.productionOrderObjId;
+                  if (
+                    (task as any).orderStageTrackingObjId?.orderVariantObjId
+                      ?.orderObjId
+                  ) {
+                    orderData = (task as any).orderStageTrackingObjId
+                      .orderVariantObjId.orderObjId;
+                  } else if (
+                    (task as any).preProductionOrderStageTrackingObjId
+                      ?.preProductionOrderVariantObjId?.preProductionOrderObjId
+                  ) {
+                    orderData = (task as any)
+                      .preProductionOrderStageTrackingObjId
+                      .preProductionOrderVariantObjId.preProductionOrderObjId;
+                  } else if (
+                    (task as any).productionOrderStageTrackingObjId
+                      ?.productionOrderVariantObjId?.productionOrderObjId
+                  ) {
+                    orderData = (task as any).productionOrderStageTrackingObjId
+                      .productionOrderVariantObjId.productionOrderObjId;
                   }
 
                   if (orderData?.productType) {
                     return (
                       <>
                         <View style={ui.productRow}>
-                          <Ionicons name="grid-outline" size={18} color="#8B5CF6" />
+                          <Ionicons
+                            name="grid-outline"
+                            size={18}
+                            color="#8B5CF6"
+                          />
                           <Text style={ui.productLabel}>Type:</Text>
-                          <Text style={ui.productValue}>{orderData.productType || "N/A"}</Text>
+                          <Text style={ui.productValue}>
+                            {orderData.productType || "N/A"}
+                          </Text>
                         </View>
                         <View style={ui.productRow}>
-                          <Ionicons name="albums-outline" size={18} color="#8B5CF6" />
+                          <Ionicons
+                            name="albums-outline"
+                            size={18}
+                            color="#8B5CF6"
+                          />
                           <Text style={ui.productLabel}>Class:</Text>
-                          <Text style={ui.productValue}>{orderData.productClass || "N/A"}</Text>
+                          <Text style={ui.productValue}>
+                            {orderData.productClass || "N/A"}
+                          </Text>
                         </View>
                         <View style={[ui.productRow, { borderBottomWidth: 0 }]}>
-                          <Ionicons name="list-outline" size={18} color="#8B5CF6" />
+                          <Ionicons
+                            name="list-outline"
+                            size={18}
+                            color="#8B5CF6"
+                          />
                           <Text style={ui.productLabel}>Subclass:</Text>
-                          <Text style={ui.productValue}>{orderData.productSubclass || "N/A"}</Text>
+                          <Text style={ui.productValue}>
+                            {orderData.productSubclass || "N/A"}
+                          </Text>
                         </View>
                       </>
                     );
@@ -737,7 +834,8 @@ const TaskDetailPage: React.FC<Props> = ({
                 <TouchableOpacity
                   style={[
                     ui.captureBtn,
-                    (locationStatus !== "success" || !location) && ui.captureBtnDisabled,
+                    (locationStatus !== "success" || !location) &&
+                      ui.captureBtnDisabled,
                   ]}
                   onPress={handlePhoto}
                   activeOpacity={0.7}
@@ -755,10 +853,13 @@ const TaskDetailPage: React.FC<Props> = ({
                         }
                       />
                     </View>
-                    <Text style={[
-                      ui.captureTitle,
-                      (locationStatus !== "success" || !location) && ui.captureDisabledText,
-                    ]}>
+                    <Text
+                      style={[
+                        ui.captureTitle,
+                        (locationStatus !== "success" || !location) &&
+                          ui.captureDisabledText,
+                      ]}
+                    >
                       Take Inspection Photo
                     </Text>
                     <Text style={ui.captureSubtitle}>
@@ -789,7 +890,11 @@ const TaskDetailPage: React.FC<Props> = ({
                       <View style={ui.photoWrapper}>
                         <Image source={{ uri }} style={ui.thumb} />
                         <View style={ui.photoOverlay}>
-                          <Ionicons name="expand-outline" size={18} color="#fff" />
+                          <Ionicons
+                            name="expand-outline"
+                            size={18}
+                            color="#fff"
+                          />
                         </View>
                         {i >= (task.photos?.length || 0) && (
                           <View style={ui.newBadge}>
@@ -853,7 +958,9 @@ const TaskDetailPage: React.FC<Props> = ({
                     style={{ marginBottom: 10 }}
                   />
                   <Text style={ui.commentsText}>
-                    {task.comments || (task as any).remarks || "No comments provided"}
+                    {task.comments ||
+                      (task as any).remarks ||
+                      "No comments provided"}
                   </Text>
                 </View>
               )}
@@ -866,7 +973,12 @@ const TaskDetailPage: React.FC<Props> = ({
               <View style={ui.sectionHeader}>
                 <Text style={ui.sectionTitle}>Rejection Reason</Text>
               </View>
-              <View style={[ui.card, { backgroundColor: ColorConstants.danger + "10" }]}>
+              <View
+                style={[
+                  ui.card,
+                  { backgroundColor: ColorConstants.danger + "10" },
+                ]}
+              >
                 <View style={ui.rejectionBox}>
                   <Ionicons
                     name="close-circle"
@@ -937,15 +1049,17 @@ const TaskDetailPage: React.FC<Props> = ({
           {/* ACTION BUTTONS */}
           {isPending && (
             <View style={ui.actionSection}>
-
               <TouchableOpacity
                 style={[
                   ui.submitBtn,
-                  (locationStatus !== "success" || !location || isSubmitting) && ui.submitBtnDisabled,
+                  (locationStatus !== "success" || !location || isSubmitting) &&
+                    ui.submitBtnDisabled,
                 ]}
                 onPress={() => submit("Completed")}
                 activeOpacity={0.8}
-                disabled={locationStatus !== "success" || !location || isSubmitting}
+                disabled={
+                  locationStatus !== "success" || !location || isSubmitting
+                }
               >
                 {isSubmitting ? (
                   <ActivityIndicator size="small" color="#fff" />
@@ -958,7 +1072,6 @@ const TaskDetailPage: React.FC<Props> = ({
               </TouchableOpacity>
             </View>
           )}
-
         </ScrollView>
 
         {/* FULLSCREEN IMAGE MODAL */}

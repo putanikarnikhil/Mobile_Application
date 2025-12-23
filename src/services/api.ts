@@ -13,7 +13,6 @@ export const debugAsyncStorage = async () => {
     const keys = await AsyncStorage.getAllKeys();
     const stores = await AsyncStorage.multiGet(keys);
 
-    log.debug("📦 ASYNC STORAGE DUMP START");
     if (stores.length === 0) log.debug("🫙 Storage is empty");
 
     stores.forEach(([key, value]) => {
@@ -24,8 +23,6 @@ export const debugAsyncStorage = async () => {
         log.debug(`🔹 ${key}:`, value);
       }
     });
-
-    log.debug("📦 ASYNC STORAGE DUMP END");
   } catch (error) {
     log.error("❌ Error retrieving AsyncStorage:", error);
   }
@@ -35,7 +32,7 @@ export const debugAsyncStorage = async () => {
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-  headers: {},  
+  headers: {},
 });
 
 /* Request Interceptor - Attach Token */
@@ -45,7 +42,6 @@ api.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      log.debug("🔑 Token attached to request");
     }
 
     return config;
@@ -59,7 +55,6 @@ api.interceptors.request.use(
 /* Response Interceptor - Auto Logout on 401 */
 api.interceptors.response.use(
   (response) => {
-    log.debug("✅ API Response:", response.status);
     return response;
   },
   async (error) => {

@@ -61,7 +61,6 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
           location
         );
 
-        log.debug("✅ Task rejected successfully");
         return;
       }
 
@@ -75,7 +74,6 @@ const TaskStackNavigator: React.FC<TaskStackProps> = (props) => {
           "Completed"
         );
 
-        log.debug("✅ Task completed successfully");
         return;
       }
 
